@@ -1,0 +1,14 @@
+# Windows 下载标记文件（ADS）
+*:Zone.Identifier
+
+# 内部任务书 / 压缩包 / 设计源图 —— 不进公开仓库
+/docs/
+*.zip
+*.docx
+/*.jpeg
+
+# 环境变量（含密钥）
+.env
+.env.*
+.dev.vars
+.wrangler/

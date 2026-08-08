@@ -1,0 +1,1218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 得意黑 Smiley Sans（OFL 开源，可商用可网页嵌入）自托管 */
+@font-face {
+  font-family: "Smiley Sans";
+  src: url("/fonts/SmileySans-Oblique.ttf.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0a0a0f;
+  --card: rgba(18, 18, 28, 0.6);
+  --gold: #c9a227;
+  --gold-light: #e8c96a;
+  --vermilion: #b94a3d;
+  --text: #e8e6e0;
+  --muted: #8a8698;
+  --font-display: "Smiley Sans", "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-title: "Smiley Sans", "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-body: "Smiley Sans", "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+  --font-ui: "Smiley Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --background: #0a0a0f;
+  --foreground: #e8e6e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-east-asian: proportional-width;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
+}
+
+p {
+  line-height: 1.7;
+}
+
+:where(.type-overline) {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  letter-spacing: 0.22em;
+  color: rgba(138, 134, 152, 0.86);
+}
+
+:where(.type-title) {
+  font-family: var(--font-title);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.38;
+  color: #e8c96a;
+  text-shadow: 0 0 14px rgba(201, 162, 39, 0.18);
+}
+
+:where(.type-body) {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: rgba(232, 230, 224, 0.9);
+}
+
+:where(.type-caption) {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: rgba(138, 134, 152, 0.88);
+}
+
+/* ===== 背景图（任务书：暗金命盘氛围，深色遮罩保证文字可读） ===== */
+/* 2026-08-07 第三轮：用户重新提供 6 张分页背景（首页/占卜+日签/合盘/八字/紫微/结果），
+   亮度远高于旧素材（旧~15，新 19-49）。按页专图 + 弱分散光晕点缀 + 浅遮罩。
+   应验簿复用首页背景（用户指定）。旧 bg-form.webp 不再使用。 */
+
+.bg-home {
+  background:
+    radial-gradient(ellipse 50% 36% at 50% 0%, rgba(201, 162, 39, 0.14), transparent 58%),
+    linear-gradient(rgba(16, 16, 18, 0.34), rgba(16, 16, 18, 0.52)),
+    url("/images/bg-home.webp") center / cover no-repeat;
+}
+
+/* 占卜 / 每日一签 */
+.bg-ask {
+  background:
+    radial-gradient(ellipse 46% 32% at 30% 16%, rgba(201, 162, 39, 0.12), transparent 60%),
+    radial-gradient(ellipse 42% 30% at 74% 34%, rgba(201, 162, 39, 0.1), transparent 58%),
+    radial-gradient(ellipse 38% 28% at 40% 78%, rgba(232, 201, 106, 0.08), transparent 54%),
+    linear-gradient(rgba(10, 10, 15, 0.22), rgba(10, 10, 15, 0.4)),
+    url("/images/bg-ask.webp") center / cover no-repeat;
+}
+
+/* 双人合盘（输入 + 结果） */
+.bg-compat {
+  background:
+    radial-gradient(ellipse 46% 32% at 26% 18%, rgba(201, 162, 39, 0.12), transparent 60%),
+    radial-gradient(ellipse 42% 30% at 78% 36%, rgba(201, 162, 39, 0.1), transparent 58%),
+    radial-gradient(ellipse 38% 28% at 44% 80%, rgba(232, 201, 106, 0.08), transparent 54%),
+    linear-gradient(rgba(10, 10, 15, 0.28), rgba(10, 10, 15, 0.46)),
+    url("/images/bg-compat.webp") center / cover no-repeat;
+}
+
+/* 四柱八字 */
+.bg-bazi {
+  background:
+    radial-gradient(ellipse 46% 32% at 28% 16%, rgba(201, 162, 39, 0.12), transparent 60%),
+    radial-gradient(ellipse 42% 30% at 76% 34%, rgba(201, 162, 39, 0.1), transparent 58%),
+    radial-gradient(ellipse 38% 28% at 42% 80%, rgba(232, 201, 106, 0.08), transparent 54%),
+    linear-gradient(rgba(10, 10, 15, 0.26), rgba(10, 10, 15, 0.44)),
+    url("/images/bg-bazi.webp") center / cover no-repeat;
+}
+
+/* 紫微斗数 */
+.bg-ziwei {
+  background:
+    radial-gradient(ellipse 46% 32% at 30% 16%, rgba(201, 162, 39, 0.12), transparent 60%),
+    radial-gradient(ellipse 42% 30% at 74% 34%, rgba(201, 162, 39, 0.1), transparent 58%),
+    radial-gradient(ellipse 38% 28% at 40% 78%, rgba(232, 201, 106, 0.08), transparent 54%),
+    linear-gradient(rgba(10, 10, 15, 0.26), rgba(10, 10, 15, 0.44)),
+    url("/images/bg-ziwei.webp") center / cover no-repeat;
+}
+
+/* 结果页 / 分享图（最亮素材 49，遮罩稍深保可读） */
+.bg-result {
+  background:
+    radial-gradient(ellipse 46% 32% at 28% 14%, rgba(201, 162, 39, 0.12), transparent 58%),
+    radial-gradient(ellipse 42% 30% at 76% 30%, rgba(201, 162, 39, 0.1), transparent 56%),
+    radial-gradient(ellipse 36% 26% at 40% 82%, rgba(232, 201, 106, 0.08), transparent 52%),
+    linear-gradient(rgba(10, 10, 15, 0.28), rgba(10, 10, 15, 0.46)),
+    url("/images/bg-result.webp") center / cover no-repeat;
+}
+
+/* 应验簿：复用首页背景（用户指定） */
+.bg-ledger {
+  background:
+    radial-gradient(ellipse 50% 36% at 50% 0%, rgba(201, 162, 39, 0.14), transparent 58%),
+    linear-gradient(rgba(16, 16, 18, 0.34), rgba(16, 16, 18, 0.52)),
+    url("/images/bg-home.webp") center / cover no-repeat;
+}
+
+/* 移动端：新素材竖屏 cover 时中间竖条也亮，遮罩再浅一档 */
+@media (max-width: 760px) {
+  .bg-home,
+  .bg-ledger {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 10%, rgba(201, 162, 39, 0.16), transparent 56%),
+      linear-gradient(rgba(16, 16, 18, 0.26), rgba(16, 16, 18, 0.42)),
+      url("/images/bg-home.webp") center / cover no-repeat;
+  }
+
+  .bg-ask {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 12%, rgba(201, 162, 39, 0.15), transparent 56%),
+      radial-gradient(ellipse 50% 26% at 38% 52%, rgba(201, 162, 39, 0.1), transparent 52%),
+      radial-gradient(ellipse 46% 24% at 62% 84%, rgba(232, 201, 106, 0.09), transparent 50%),
+      linear-gradient(rgba(10, 10, 15, 0.16), rgba(10, 10, 15, 0.32)),
+      url("/images/bg-ask.webp") center / cover no-repeat;
+  }
+
+  .bg-compat {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 12%, rgba(201, 162, 39, 0.15), transparent 56%),
+      radial-gradient(ellipse 50% 26% at 38% 52%, rgba(201, 162, 39, 0.1), transparent 52%),
+      radial-gradient(ellipse 46% 24% at 62% 84%, rgba(232, 201, 106, 0.09), transparent 50%),
+      linear-gradient(rgba(10, 10, 15, 0.16), rgba(10, 10, 15, 0.32)),
+      url("/images/bg-compat.webp") center / cover no-repeat;
+  }
+
+  .bg-bazi {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 12%, rgba(201, 162, 39, 0.15), transparent 56%),
+      radial-gradient(ellipse 50% 26% at 38% 52%, rgba(201, 162, 39, 0.1), transparent 52%),
+      radial-gradient(ellipse 46% 24% at 62% 84%, rgba(232, 201, 106, 0.09), transparent 50%),
+      linear-gradient(rgba(10, 10, 15, 0.16), rgba(10, 10, 15, 0.32)),
+      url("/images/bg-bazi.webp") center / cover no-repeat;
+  }
+
+  .bg-ziwei {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 12%, rgba(201, 162, 39, 0.15), transparent 56%),
+      radial-gradient(ellipse 50% 26% at 38% 52%, rgba(201, 162, 39, 0.1), transparent 52%),
+      radial-gradient(ellipse 46% 24% at 62% 84%, rgba(232, 201, 106, 0.09), transparent 50%),
+      linear-gradient(rgba(10, 10, 15, 0.16), rgba(10, 10, 15, 0.32)),
+      url("/images/bg-ziwei.webp") center / cover no-repeat;
+  }
+
+  .bg-result {
+    background:
+      radial-gradient(ellipse 58% 30% at 50% 12%, rgba(201, 162, 39, 0.15), transparent 56%),
+      radial-gradient(ellipse 50% 26% at 38% 52%, rgba(201, 162, 39, 0.1), transparent 52%),
+      radial-gradient(ellipse 46% 24% at 62% 84%, rgba(232, 201, 106, 0.09), transparent 50%),
+      linear-gradient(rgba(10, 10, 15, 0.18), rgba(10, 10, 15, 0.34)),
+      url("/images/bg-result.webp") center / cover no-repeat;
+  }
+}
+
+.bg-divining {
+  background:
+    radial-gradient(ellipse 50% 38% at 24% 22%, rgba(232, 201, 106, 0.14), transparent 62%),
+    radial-gradient(ellipse 46% 34% at 80% 34%, rgba(232, 201, 106, 0.1), transparent 60%),
+    radial-gradient(ellipse 42% 32% at 30% 76%, rgba(212, 165, 116, 0.08), transparent 58%),
+    linear-gradient(rgba(10, 10, 15, 0.24), rgba(10, 10, 15, 0.42)),
+    url("/images/bg-result.webp") center / cover no-repeat;
+  background-attachment: fixed;
+}
+
+/* 半透明黑金玻璃卡 */
+.glass-card {
+  background: rgba(18, 18, 28, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.08) inset,
+    0 20px 60px rgba(0, 0, 0, 0.35);
+}
+.glass-card:hover {
+  border-color: rgba(232, 201, 106, 0.56);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.12) inset,
+    0 24px 70px rgba(0, 0, 0, 0.42),
+    0 0 28px rgba(201, 162, 39, 0.16);
+}
+
+/* 暗金图标（资产包 SVG 统一尺寸 + 轻微金色光晕） */
+.icon-gold {
+  width: 44px;
+  height: 44px;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(201, 162, 39, 0.28));
+}
+
+/* 朱砂印章（任务书：印章感，非普通 badge；真朱砂红 + 色块中空字） */
+.seal-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(185, 74, 61, 0.18);
+  border: 1px solid rgba(185, 74, 61, 0.65);
+  color: #e8b4a8;
+  font-family: var(--font-title);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+/* 宣纸纹理背景（SVG 噪点，固定层） */
+.paper-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* 微光粒子层 */
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #c9a227;
+  border-radius: 50%;
+  opacity: 0.6;
+  box-shadow: 0 0 6px #c9a227;
+}
+
+/* 每日一签起签器（2026-08-07：去中间图标、三签缩小居中、圆盘常转仿推演罗盘、抽签时三签浮动）
+   旋转层：aura/ring 常转（盘感）；签条留在中心静止层不随盘转，抽签时浮动 */
+.daily-lot-caster {
+  position: relative;
+  display: block;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 162, 39, 0.34);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(232, 201, 106, 0.16), transparent 34%),
+    radial-gradient(circle at 50% 72%, rgba(212, 165, 116, 0.12), transparent 36%),
+    rgba(18, 18, 28, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.08) inset,
+    0 20px 60px rgba(0, 0, 0, 0.34),
+    0 0 34px rgba(201, 162, 39, 0.12);
+}
+.daily-lot-caster:focus-visible {
+  outline: 2px solid rgba(232, 201, 106, 0.72);
+  outline-offset: 4px;
+}
+.lot-aura,
+.lot-ring,
+.lot-slip {
+  position: absolute;
+  pointer-events: none;
+}
+.lot-aura {
+  inset: 22px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.18), transparent 64%);
+  filter: blur(2px);
+  animation: lotAuraPulse 3s ease-in-out infinite;
+}
+.lot-ring {
+  inset: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  animation: lotRingSpin 9s linear infinite;
+}
+.lot-ring::before,
+.lot-ring::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  border: 1px dashed rgba(201, 162, 39, 0.25);
+}
+.lot-ring::after {
+  inset: 24px;
+  border-style: solid;
+  opacity: 0.45;
+}
+/* 三签缩小、居中：以圆盘中点为原点小角度展开（静止层，不随盘转） */
+.lot-slip {
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 5px;
+  height: 40px;
+  margin-top: -20px;
+  border-radius: 999px;
+  transform-origin: 50% 100%;
+  background: linear-gradient(180deg, #e8c96a, #c9a227 48%, #d4a574);
+  opacity: 0.8;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.22);
+}
+.lot-slip-a {
+  transform: translateX(-22px) rotate(-18deg);
+}
+.lot-slip-b {
+  height: 48px;
+  margin-top: -24px;
+  transform: translateX(-3px) rotate(2deg);
+}
+.lot-slip-c {
+  height: 36px;
+  margin-top: -18px;
+  transform: translateX(18px) rotate(16deg);
+}
+.daily-lot-caster.is-casting {
+  animation: lotCasterShake 0.72s ease-in-out infinite;
+}
+.daily-lot-caster.is-casting .lot-ring {
+  animation: lotRingSpin 1.6s linear infinite;
+}
+.daily-lot-caster.is-casting .lot-slip-a {
+  animation: lotSlipA 0.84s ease-in-out infinite;
+}
+.daily-lot-caster.is-casting .lot-slip-b {
+  animation: lotSlipB 0.78s ease-in-out infinite;
+}
+.daily-lot-caster.is-casting .lot-slip-c {
+  animation: lotSlipC 0.88s ease-in-out infinite;
+}
+
+@keyframes lotAuraPulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+@keyframes lotCasterShake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-2deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(2deg);
+  }
+}
+@keyframes lotRingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* 抽签时三签微微上下浮动（保持居中基准） */
+@keyframes lotSlipA {
+  0%,
+  100% {
+    transform: translateX(-22px) translateY(0) rotate(-18deg);
+  }
+  50% {
+    transform: translateX(-25px) translateY(-9px) rotate(-22deg);
+  }
+}
+@keyframes lotSlipB {
+  0%,
+  100% {
+    transform: translateX(-3px) translateY(0) rotate(2deg);
+  }
+  50% {
+    transform: translateX(-3px) translateY(-12px) rotate(-2deg);
+  }
+}
+@keyframes lotSlipC {
+  0%,
+  100% {
+    transform: translateX(18px) translateY(0) rotate(16deg);
+  }
+  50% {
+    transform: translateX(22px) translateY(-8px) rotate(21deg);
+  }
+}
+
+/* 推演页命盘罗盘 */
+.mystic-compass {
+  position: relative;
+  width: 214px;
+  height: 214px;
+  border-radius: 999px;
+  isolation: isolate;
+}
+.compass-halo,
+.compass-ring,
+.compass-meridian,
+.compass-gua,
+.compass-orbit-dot,
+.compass-needle,
+.compass-core {
+  position: absolute;
+  pointer-events: none;
+}
+.compass-halo {
+  inset: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(232, 201, 106, 0.2), transparent 36%),
+    radial-gradient(circle, transparent 54%, rgba(201, 162, 39, 0.1) 56%, transparent 70%);
+  filter: blur(1px);
+  animation: compassHalo 4.2s ease-in-out infinite;
+}
+.compass-ring {
+  border-radius: 999px;
+  border: 1px solid rgba(201, 162, 39, 0.32);
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.08);
+}
+.compass-ring-outer {
+  inset: 8px;
+  border-color: rgba(232, 201, 106, 0.34);
+  background:
+    conic-gradient(from 0deg, rgba(201, 162, 39, 0.24) 0 1deg, transparent 1deg 15deg),
+    radial-gradient(circle, transparent 61%, rgba(201, 162, 39, 0.1) 62%, transparent 64%);
+  animation: compassSpin 18s linear infinite;
+}
+.compass-ring-middle {
+  inset: 31px;
+  border-style: dashed;
+  opacity: 0.8;
+  animation: compassSpinReverse 13s linear infinite;
+}
+.compass-ring-inner {
+  inset: 61px;
+  border-color: rgba(212, 165, 116, 0.44);
+  background: radial-gradient(circle, rgba(10, 10, 15, 0.64), rgba(18, 18, 28, 0.2));
+  animation: compassBreath 2.8s ease-in-out infinite;
+}
+.compass-meridian {
+  left: 50%;
+  top: 18px;
+  bottom: 18px;
+  width: 1px;
+  transform-origin: 50% 50%;
+  background: linear-gradient(transparent, rgba(201, 162, 39, 0.28), transparent);
+}
+.compass-meridian-v {
+  transform: translateX(-50%);
+}
+.compass-meridian-h {
+  transform: translateX(-50%) rotate(90deg);
+}
+.compass-meridian-a {
+  transform: translateX(-50%) rotate(45deg);
+}
+.compass-meridian-b {
+  transform: translateX(-50%) rotate(-45deg);
+}
+.compass-gua {
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 22px;
+  margin-left: -11px;
+  margin-top: -11px;
+  font-family: var(--font-title);
+  font-size: 0.76rem;
+  line-height: 22px;
+  color: rgba(232, 201, 106, 0.78);
+  text-align: center;
+  text-shadow: 0 0 10px rgba(201, 162, 39, 0.28);
+}
+.compass-gua-0 {
+  transform: rotate(-90deg) translateX(78px) rotate(90deg);
+}
+.compass-gua-1 {
+  transform: rotate(-45deg) translateX(78px) rotate(45deg);
+}
+.compass-gua-2 {
+  transform: rotate(0deg) translateX(78px) rotate(0deg);
+}
+.compass-gua-3 {
+  transform: rotate(45deg) translateX(78px) rotate(-45deg);
+}
+.compass-gua-4 {
+  transform: rotate(90deg) translateX(78px) rotate(-90deg);
+}
+.compass-gua-5 {
+  transform: rotate(135deg) translateX(78px) rotate(-135deg);
+}
+.compass-gua-6 {
+  transform: rotate(180deg) translateX(78px) rotate(-180deg);
+}
+.compass-gua-7 {
+  transform: rotate(225deg) translateX(78px) rotate(-225deg);
+}
+.compass-orbit-dot {
+  z-index: 3;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #e8c96a;
+  box-shadow: 0 0 14px rgba(232, 201, 106, 0.72);
+}
+.compass-orbit-dot-a {
+  left: 50%;
+  top: 50%;
+  animation: compassDotA 3.6s linear infinite;
+}
+.compass-orbit-dot-b {
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  opacity: 0.72;
+  animation: compassDotB 5s linear infinite;
+}
+.compass-needle {
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  width: 2px;
+  height: 72px;
+  transform-origin: 50% 88%;
+  background: linear-gradient(transparent 6%, #e8c96a 10%, #d4a574 54%, transparent 55%);
+  filter: drop-shadow(0 0 8px rgba(232, 201, 106, 0.45));
+  animation: compassNeedle 3.2s cubic-bezier(0.42, 0, 0.22, 1) infinite;
+}
+.compass-needle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  transform: translateX(-50%) rotate(45deg);
+  background: #e8c96a;
+  box-shadow: 0 0 12px rgba(232, 201, 106, 0.45);
+}
+.compass-core {
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  display: flex;
+  width: 66px;
+  height: 66px;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 1px solid rgba(232, 201, 106, 0.5);
+  background:
+    radial-gradient(circle, rgba(232, 201, 106, 0.14), transparent 58%),
+    rgba(10, 10, 15, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.1) inset,
+    0 0 28px rgba(201, 162, 39, 0.24);
+}
+.compass-core span {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: #e8c96a;
+  text-shadow: 0 0 16px rgba(232, 201, 106, 0.38);
+}
+
+@keyframes compassSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes compassSpinReverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes compassHalo {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@keyframes compassBreath {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(201, 162, 39, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(201, 162, 39, 0.22);
+  }
+}
+@keyframes compassNeedle {
+  0%,
+  100% {
+    transform: translate(-50%, -88%) rotate(-20deg);
+  }
+  35% {
+    transform: translate(-50%, -88%) rotate(42deg);
+  }
+  70% {
+    transform: translate(-50%, -88%) rotate(12deg);
+  }
+}
+@keyframes compassDotA {
+  from {
+    transform: rotate(0deg) translateX(99px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(99px) rotate(-360deg);
+  }
+}
+@keyframes compassDotB {
+  from {
+    transform: rotate(160deg) translateX(62px) rotate(-160deg);
+  }
+  to {
+    transform: rotate(-200deg) translateX(62px) rotate(200deg);
+  }
+}
+
+/* 鎏金渐变主按钮 */
+.btn-primary {
+  @apply relative w-full overflow-hidden rounded-[10px] py-4 font-semibold tracking-[0.2em] text-ink transition-all duration-300;
+  font-family: var(--font-title);
+  background: linear-gradient(135deg, #8a6d1a, #c9a227, #e8c96a);
+}
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+.btn-primary:hover::before {
+  left: 100%;
+}
+.btn-primary:hover {
+  box-shadow: 0 0 30px rgba(201, 162, 39, 0.4);
+  transform: translateY(-2px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* 卡片（玻璃质感：半透明黑金） */
+.card {
+  @apply relative rounded-card p-6;
+  background: rgba(18, 18, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.08) inset,
+    0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.card-title {
+  @apply mb-5 flex items-center gap-2 text-gold-light;
+  font-family: var(--font-title);
+  font-size: 1.08rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 14px rgba(201, 162, 39, 0.18);
+}
+.card-title::before {
+  content: "";
+  display: block;
+  width: 3px;
+  height: 18px;
+  background: linear-gradient(180deg, #e8c96a, #c9a227);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.34);
+}
+
+/* 表单控件 */
+.form-label {
+  @apply mb-1.5 block text-xs tracking-[0.1em] text-mist-dim;
+  font-family: var(--font-title);
+}
+.form-input,
+.form-select {
+  @apply w-full rounded-lg border px-3.5 py-3 text-sm text-mist outline-none transition-all duration-300;
+  font-family: var(--font-ui);
+  background: rgba(201, 162, 39, 0.06);
+  border-color: rgba(201, 162, 39, 0.25);
+}
+.form-input:focus,
+.form-select:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+}
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a227' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+.form-select option {
+  background: #12121c;
+  color: #e8e6e0;
+}
+
+/* ===== V3 组件 ===== */
+
+/* 页面主容器 */
+.page-shell {
+  @apply relative z-10 mx-auto w-full max-w-[480px] px-6 pb-28 pt-6;
+}
+
+/* 玻璃面板（给内联 bg-ink-card 卡片统一玻璃质感） */
+.glass-panel {
+  background: rgba(18, 18, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+}
+
+/* 返回大厅按钮 */
+.back-btn {
+  @apply mb-6 inline-flex items-center gap-2 rounded-lg border py-2 pl-3 pr-4 text-xs tracking-[0.1em] transition-all;
+  border-color: rgba(201, 162, 39, 0.25);
+  color: #8a8698;
+}
+.back-btn:hover {
+  border-color: #c9a227;
+  color: #e8c96a;
+}
+
+/* 页面内错误提示条（替代 alert：金色描边 + 朱砂「提示」印章） */
+.error-banner {
+  @apply mt-4 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-xs leading-6;
+  border-color: rgba(201, 162, 39, 0.45);
+  background: rgba(18, 18, 28, 0.85);
+  color: #f0b8a8;
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.08);
+}
+.error-banner .icon {
+  @apply mt-0.5 shrink-0;
+}
+
+/* 朱砂小印章 */
+.vermilion-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(185, 74, 61, 0.18);
+  border: 1px solid rgba(185, 74, 61, 0.65);
+  color: #e8b4a8;
+  font-family: var(--font-title);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+/* 板块标题 */
+.section-title {
+  @apply mb-4 flex items-center gap-2 text-gold-light;
+  font-family: var(--font-title);
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
+}
+.section-title::before {
+  content: "";
+  display: block;
+  width: 3px;
+  height: 14px;
+  background: #c9a227;
+  border-radius: 2px;
+}
+
+/* 术语解释小字 */
+.term-tip {
+  @apply mt-3 rounded-lg border border-dashed px-4 py-3 text-[0.72rem];
+  font-family: var(--font-body);
+  line-height: 1.85;
+  border-color: rgba(201, 162, 39, 0.25);
+  background: rgba(201, 162, 39, 0.04);
+  color: #8a8698;
+}
+.term-tip b {
+  font-family: var(--font-title);
+  color: #e8c96a;
+  font-weight: 500;
+}
+
+.term-primer {
+  @apply rounded-lg border border-dashed px-4 py-3 text-[0.7rem];
+  font-family: var(--font-body);
+  line-height: 1.75;
+  border-color: rgba(201, 162, 39, 0.25);
+  background: rgba(201, 162, 39, 0.04);
+  color: #8a8698;
+}
+.term-primer b {
+  font-family: var(--font-title);
+  color: #e8c96a;
+  font-weight: 500;
+}
+
+/* 移动端 sticky 主按钮 */
+.sticky-cta {
+  @apply fixed inset-x-0 bottom-0 z-30 border-t px-5 py-3;
+  border-color: rgba(201, 162, 39, 0.15);
+  background: rgba(10, 10, 15, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+/* 置信度条 */
+.confidence-bar {
+  @apply h-1.5 w-full overflow-hidden rounded-full;
+  background: rgba(201, 162, 39, 0.12);
+}
+.confidence-bar > i {
+  @apply block h-full rounded-full;
+  background: linear-gradient(90deg, #8a6d1a, #e8c96a);
+}
+
+/* 折叠卡片（玻璃质感） */
+.collapse-card {
+  @apply overflow-hidden rounded-card border border-gold/25;
+  background: rgba(18, 18, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.collapse-head {
+  @apply flex cursor-pointer items-center justify-between px-5 py-4 transition hover:bg-gold/5;
+}
+.collapse-head .title {
+  @apply flex items-center gap-2.5 text-gold-light;
+  font-family: var(--font-title);
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(201, 162, 39, 0.14);
+}
+.collapse-body {
+  @apply overflow-hidden transition-[max-height] duration-500 ease-in-out;
+}
+.collapse-body-inner {
+  @apply px-5 pb-5 text-sm text-mist;
+  font-family: var(--font-body);
+  line-height: 1.95;
+}
+
+/* 依据/置信度小字 */
+.analysis-basis {
+  @apply mt-2 border-l-2 pl-3 text-xs;
+  font-family: var(--font-ui);
+  line-height: 1.7;
+  border-color: rgba(201, 162, 39, 0.3);
+  color: #8a8698;
+}
+
+/* ===== VNext：P0 反馈与选中态 ===== */
+
+/* 加载转圈 */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid rgba(232, 201, 106, 0.35);
+  border-top-color: #e8c96a;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -0.15em;
+}
+
+/* 强选中态：金色光环 + inset 光，供时辰/关系/问题类型 chips 复用 */
+.strong-selected {
+  border-color: #c9a227 !important;
+  color: #e8c96a !important;
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.22), rgba(201, 162, 39, 0.08)) !important;
+  box-shadow:
+    0 0 0 2px rgba(201, 162, 39, 0.5),
+    0 0 20px rgba(201, 162, 39, 0.32),
+    inset 0 0 12px rgba(201, 162, 39, 0.1);
+}
+.sel-mark {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0 auto 2px;
+  border-radius: 50%;
+  background: #c9a227;
+  color: #0a0a0f;
+  font-size: 10px;
+  line-height: 1;
+}
+.strong-selected .sel-mark {
+  display: inline-flex;
+}
+
+/* 校验失败闪框 */
+.field-error {
+  animation: field-error-flash 1.8s ease-out;
+}
+@keyframes field-error-flash {
+  0% { box-shadow: 0 0 0 3px rgba(185, 74, 61, 0.7), 0 0 24px rgba(185, 74, 61, 0.4); }
+  60% { box-shadow: 0 0 0 3px rgba(185, 74, 61, 0.35), 0 0 12px rgba(185, 74, 61, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(185, 74, 61, 0); }
+}
+
+/* ===== VNext：toast / trust pills / 卡片 / 卦象 / chips ===== */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(13, 10, 17, 0.92);
+  color: #e8c96a;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.trust-pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: 999px;
+  color: #e8c96a;
+  background: rgba(201, 162, 39, 0.06);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.feature-card {
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  background: linear-gradient(145deg, rgba(201, 162, 39, 0.09), rgba(255, 255, 255, 0.035));
+  border-radius: 22px;
+  padding: 22px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 22px 70px rgba(0, 0, 0, 0.38);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.feature-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, 0.5);
+}
+.feature-card.primary {
+  border-color: rgba(201, 162, 39, 0.45);
+  background:
+    radial-gradient(circle at 82% 0%, rgba(201, 162, 39, 0.2), transparent 36%),
+    rgba(255, 255, 255, 0.045);
+}
+
+/* ===== 赛博玄门 · 首页专属特效（全息流光金 / 发光朱砂激活） ===== */
+
+/* 流光金骨架：发丝金边 + 霓虹内外光晕；hover 时金→朱砂红，边缘如被激活
+   （.feature-card.holo-border 提升特异性以压过 .feature-card.primary 的金色边框） */
+.holo-border,
+.feature-card.holo-border {
+  position: relative;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-color: rgba(230, 188, 107, 0.42);
+  box-shadow:
+    0 0 16px rgba(230, 188, 107, 0.18),
+    inset 0 0 16px rgba(230, 188, 107, 0.1);
+}
+.holo-border::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow:
+    0 0 18px rgba(230, 188, 107, 0.35),
+    inset 0 0 18px rgba(230, 188, 107, 0.18);
+}
+.holo-border:hover,
+.holo-border:focus-visible {
+  border-color: rgba(255, 51, 51, 0.65);
+  box-shadow:
+    0 0 22px rgba(255, 51, 51, 0.35),
+    inset 0 0 20px rgba(255, 51, 51, 0.14);
+}
+.holo-border:hover::after {
+  opacity: 1;
+}
+
+/* 全息发光标题：细笔画瘦金感字 + 多层 text-shadow 光晕，静置即有全息辉光 */
+.holo-title {
+  font-family: "Smiley Sans", "Noto Serif SC", "Songti SC", STSong, SimSun, serif;
+  color: #fff8e7;
+  text-shadow:
+    0 0 8px rgba(230, 188, 107, 0.7),
+    0 0 22px rgba(230, 188, 107, 0.38),
+    0 0 52px rgba(230, 188, 107, 0.18);
+}
+.holo-overline {
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+}
+
+/* 竖排朱砂色块中空字小标（每日一签「今日已求签」徽标） */
+.seal-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.22em;
+  text-indent: 0.1em;
+  padding: 4px 3px;
+  border-radius: 3px;
+  background: rgba(185, 74, 61, 0.18);
+  border: 1px solid rgba(185, 74, 61, 0.65);
+  color: #e8b4a8;
+  font-family: var(--font-title);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.hexagram-card {
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 24px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(185, 74, 61, 0.1), transparent 36%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.yaos {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
+.yao-line {
+  width: 88px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e8c96a;
+  box-shadow: 0 0 14px rgba(201, 162, 39, 0.36);
+}
+.yao-line.yin {
+  background: linear-gradient(90deg, #e8c96a 0 38%, transparent 38% 62%, #e8c96a 62%);
+}
+.yao-line.moving {
+  outline: 1px solid #b94a3d;
+  box-shadow: 0 0 18px rgba(185, 74, 61, 0.52);
+}
+
+.chip {
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #8a8698;
+  background: rgba(255, 255, 255, 0.03);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+.chip.active {
+  color: #e8c96a;
+  border-color: rgba(201, 162, 39, 0.5);
+  background: rgba(201, 162, 39, 0.1);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+}
+
+.ask-box textarea {
+  width: 100%;
+  min-height: 132px;
+  border: 1px solid rgba(201, 162, 39, 0.24);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.24);
+  color: #e8e6e0;
+  padding: 16px;
+  outline: none;
+  font-family: var(--font-body);
+  line-height: 1.8;
+  resize: vertical;
+}
+.ask-box textarea:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+.chart-orbit {
+  position: relative;
+  width: min(330px, 86vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  background:
+    radial-gradient(circle, rgba(201, 162, 39, 0.12) 0 2px, transparent 3px),
+    repeating-radial-gradient(circle, transparent 0 44px, rgba(201, 162, 39, 0.13) 45px, transparent 46px);
+}
+.chart-core {
+  position: absolute;
+  inset: 36%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #e8c96a;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 162, 39, 0.38);
+  font-family: var(--font-title);
+  font-size: 24px;
+}
+
+.share-card {
+  aspect-ratio: 4 / 5;
+  border: 1px solid rgba(201, 162, 39, 0.38);
+  border-radius: 24px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.18), transparent 38%),
+    linear-gradient(160deg, rgba(21, 16, 24, 0.95), rgba(7, 6, 9, 0.96));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.stamp {
+  align-self: flex-end;
+  border: 1px solid #b94a3d;
+  color: #e8b4a8;
+  padding: 6px 8px;
+  transform: rotate(8deg);
+  font-family: var(--font-title);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}

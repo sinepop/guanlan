@@ -1,0 +1,29 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img">
+
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#8a6d1a"/>
+    <stop offset="0.55" stop-color="#c9a227"/>
+    <stop offset="1" stop-color="#e8c96a"/>
+  </linearGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="1.2" result="blur"/>
+    <feMerge>
+      <feMergeNode in="blur"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+</defs>
+
+<g stroke="url(#gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+
+  <circle cx="32" cy="32" r="25"/>
+  <circle cx="32" cy="32" r="17" opacity="0.72"/>
+  <circle cx="32" cy="32" r="5" opacity="0.9"/>
+  <path d="M32 7v7M32 50v7M7 32h7M50 32h7"/>
+  <path d="M17.2 17.2l4.8 4.8M42 42l4.8 4.8M46.8 17.2L42 22M22 42l-4.8 4.8" opacity="0.75"/>
+  <path d="M32 20l4 12-4 12-4-12 4-12z"/>
+  <path d="M24 12c5 3 11 3 16 0M24 52c5-3 11-3 16 0" opacity="0.55"/>
+
+</g>
+</svg>
