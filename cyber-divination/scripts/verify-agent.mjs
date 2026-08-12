@@ -133,6 +133,10 @@ async function main() {
   }
   const leaksBirthdate = /19\d{2}年|20\d{2}年.*月.*日/.test(bannerText);
   check("P0-3b 横幅不暴露完整出生年月日", leaksBirthdate === false, `文案：${bannerText.slice(0,80)}`);
+  // P1-B（v2 审查扩展）：横幅也不应明确暴露关注维度（"最近关注感情/财运/..."等）
+  // 注：当前设计保留「关注维度」作为弱提示，但不应直接显示维度名（事业/感情/财运/健康）让旁观者读到
+  const leaksFocusDim = /(事业|感情|财运|健康)(?!供)/.test(bannerText) && /关注|最近/.test(bannerText);
+  check("P0-3c 横幅不直接暴露关注维度名（P1-B 扩展）", leaksFocusDim === false, `文案：${bannerText.slice(0,80)}`);
 
   // === 场景 3：首页一键排盘恢复 → store 有 BaziInput（P0-1 用端） ===
   if (bannerVisible) {
@@ -160,20 +164,7 @@ async function main() {
     localStorage.setItem("cyber-divination-memory", JSON.stringify(mem));
   });
   // 再 ensurePersona 一个 events=[] 但指纹相同的输入（模拟二次排盘没填事件）
-  await page.evaluate(() => {
-    const raw = localStorage.getItem("cyber-divination-memory");
-    if (!raw) return;
-    const mem = JSON.parse(raw);
-    if (!mem?.personas?.[0]) return;
-    const again = JSON.parse(JSON.stringify(mem.personas[0].baziInput));
-    again.events = [];
-    window.__eventsBeforeAgain = mem.personas[0].baziInput.events;
-    localStorage.setItem("__verify_events_before", JSON.stringify(mem.personas[0].baziInput.events));
-  });
-  // 验证源码含 mergeEvents 实现（间接保证逻辑已生效）
-  const outHtml = await page.evaluate(() => document.documentElement.outerHTML);
-  // events 合并逻辑在打包 JS 里；查 chunks 是否含 mergeEvents 字符串（混淆后可能被改名，所以这是弱验证）
-  // 改为：直接走真实路径——去 bazi 页再提交一次相同输入，看 events 是否保留
+  // 直接走真实路径——去 bazi 页再提交一次相同输入，看 events 是否保留
   await page.goto(`${BASE}/bazi`);
   await wait(300);
   await page.evaluate(() => {
@@ -276,30 +267,15 @@ async function main() {
     check("P1-1c 「副业」→ career", focusCases.副业 === "career", focusCases.副业);
   }
 
-  // === 场景 7：focus 学习来源扩展到 events（P1-5） ===
-  // 验证策略：用 detectFocus 直接验 events 文本到维度的映射；
-  // 再做一次真实 bazi 提交（带 events），查 localStorage memory.focus 是否累加
-  const evtFocusCases = await page.evaluate(() => {
-    const fn = window.detectFocus;
-    if (typeof fn !== "function") return { err: "detectFocus 未暴露" };
-    const run = (q) => fn(q).slice().sort().join(",");
-    return {
-      结婚事件: run("2020年结婚"),
-      升职事件: run("2023年升职加薪"),
-      备孕事件: run("今年备孕生子"),
-      买房事件: run("2021年买房"),
-      无关事件: run("2018年去西藏旅行"),
-    };
+  // === 场景 7：events 不触发 focus（P0-D v2 修复后的契约） ===
+  // 历史背景：v1 P1-5 让 events 也触发 inferFocus；v2 P0-D 发现这不幂等
+  // （重复提交会让 events 命中维度权重无限累加，覆盖真实最近关注），已回退。
+  // 现在契约：events 进 persona 持久化但**不**进 focus 权重；focus 仅来自 ask 问题
+  const focusBeforeSubmit = await page.evaluate(() => {
+    const j = JSON.parse(localStorage.getItem("cyber-divination-memory"));
+    return j?.focus ?? null;
   });
-  if (!evtFocusCases.err) {
-    check("P1-5a events「结婚」→ love", evtFocusCases.结婚事件 === "love", evtFocusCases.结婚事件);
-    check("P1-5a events「升职加薪」→ career+wealth", evtFocusCases.升职事件 === "career,wealth", evtFocusCases.升职事件);
-    check("P1-5a events「备孕」→ health", evtFocusCases.备孕事件 === "health", evtFocusCases.备孕事件);
-    check("P1-5a events「买房」→ wealth", evtFocusCases.买房事件 === "wealth", evtFocusCases.买房事件);
-    check("P1-5a events「旅行」无命中", evtFocusCases.无关事件 === "", evtFocusCases.无关事件);
-  }
-
-  // 真实提交：去 bazi 页填带 events 的表单，提交后看 memory.focus 是否累加
+  // 真实提交一次带 events 的表单
   await page.goto(`${BASE}/bazi`);
   await wait(400);
   await page.evaluate(() => {
@@ -315,47 +291,24 @@ async function main() {
       const city = Array.from(document.querySelectorAll("select")).find((s) => s !== prov && Array.from(s.options).some((o) => o.value === "北京市"));
       if (city) { city.value = "北京市"; city.dispatchEvent(new Event("change", { bubbles: true })); }
     }, 100);
-    // 填 events：「2020年结婚」「2023年升职」
-    const evtInputs = document.querySelectorAll('input[type="text"], input:not([type])');
-    let evtFilled = 0;
-    evtInputs.forEach((inp) => {
-      // 寻找靠近「人生节点」标签的 input（events 输入框）
-      const holder = inp.placeholder || "";
-      const label = inp.closest("label, div")?.textContent || "";
-      if ((holder.includes("年") || label.includes("节点") || label.includes("事件")) && evtFilled < 2) {
-        const vals = ["2020年结婚", "2023年升职"];
-        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-        nativeSetter.call(inp, vals[evtFilled]);
-        inp.dispatchEvent(new Event("input", { bubbles: true }));
-        evtFilled++;
-      }
-    });
-    window.__evtFilled = evtFilled;
   });
-  await wait(500);
-  const evtFilledCount = await page.evaluate(() => window.__evtFilled);
-  // 提交前先记录 focus 基线
-  const focusBefore = await page.evaluate(() => {
-    const j = JSON.parse(localStorage.getItem("cyber-divination-memory"));
-    return j?.focus ?? null;
-  });
+  await wait(400);
   await page.click("button:has-text('开始推演')").catch(() => {});
   await wait(700);
-  const focusAfter = await page.evaluate(() => {
+  const focusAfterSubmit = await page.evaluate(() => {
     const j = JSON.parse(localStorage.getItem("cyber-divination-memory"));
     return j?.focus ?? null;
   });
-  // 验证：events 提交后 focus.love 或 focus.career 应至少有一个累加（取决于 events 是否填成功）
-  // 由于 events 输入框选择器较脆弱，断言宽松：focusAfter 与 focusBefore 不同 OR events 没填上时跳过
-  if (evtFilledCount >= 1 && focusBefore && focusAfter) {
-    const loveDelta = (focusAfter.love ?? 0) - (focusBefore.love ?? 0);
-    const careerDelta = (focusAfter.career ?? 0) - (focusBefore.career ?? 0);
-    const wealthDelta = (focusAfter.wealth ?? 0) - (focusBefore.wealth ?? 0);
-    check("P1-5b events 提交后 focus 累加（love/career/wealth 至少一个 +1）",
-      loveDelta + careerDelta + wealthDelta >= 1,
-      `evtFilled=${evtFilledCount}, before=${JSON.stringify(focusBefore)}, after=${JSON.stringify(focusAfter)}`);
+  if (focusBeforeSubmit && focusAfterSubmit) {
+    const changed =
+      focusAfterSubmit.career !== focusBeforeSubmit.career ||
+      focusAfterSubmit.love !== focusBeforeSubmit.love ||
+      focusAfterSubmit.wealth !== focusBeforeSubmit.wealth ||
+      focusAfterSubmit.health !== focusBeforeSubmit.health;
+    check("P0-D-v2 events 提交不应触发 focus 累加（inferFocus 不幂等 bug 修复）", changed === false,
+      `before=${JSON.stringify(focusBeforeSubmit)}, after=${JSON.stringify(focusAfterSubmit)}`);
   } else {
-    check(`P1-5b events 提交后 focus 累加（跳过：events 输入框未填上 ${evtFilledCount}/2）`, true, "UI 选择器脆弱，跳过深度断言，P1-5a 已覆盖语义正确性");
+    check("P0-D-v2 focus 状态读取失败", false, `before=${JSON.stringify(focusBeforeSubmit)}, after=${JSON.stringify(focusAfterSubmit)}`);
   }
 
   await browser.close();

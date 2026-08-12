@@ -8,7 +8,7 @@ import { PROVINCES, DEFAULT_CITY } from "@/lib/locations";
 import { SHICHEN_NAMES, SHICHEN_RANGES } from "@/lib/solarTime";
 import { isValidLunarDate } from "@/lib/bazi";
 import { store } from "@/lib/store";
-import { ensurePersona, getPrimaryPersona, inferFocus } from "@/lib/memory";
+import { ensurePersona, getPrimaryPersona } from "@/lib/memory";
 import type { CalendarMode, TimeMode, BaziInput, DivinationView } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
@@ -149,10 +149,10 @@ export default function BaziPage() {
     window.setTimeout(() => {
       store.setBaziInput(input);
       ensurePersona(input); // 语义记忆：固化生辰为 persona slots（下次进站识别老用户）
-      // P1-5：events 也作为关注维度学习来源（如「2020年结婚」「2023年升职」）
-      // 用 events 触发 focus 学习，避免只依赖 ask 页问题文本
-      const evtText = input.events.filter((e) => e.trim()).join(" ");
-      if (evtText) inferFocus(evtText);
+      // 注：events 不触发 inferFocus —— events 是「人生大事」（已发生事件），
+      // 不是「当前关注」。focus 画像仅来自 ask 页问题（用户当下问什么 = 当下关心什么）。
+      // 之前 P1-5 在这里加过 inferFocus(events)，但运行时审查（v2 P0-D）发现它不幂等：
+      // 重复提交（修时辰/性别/地点）会让 events 命中维度权重无限累加，覆盖真实最近关注。
       window.location.href = "/divining";
     }, 450);
   }

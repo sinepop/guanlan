@@ -153,7 +153,6 @@ export function ensurePersona(input: BaziInput, label = "自己"): string {
     existing.lastUsedAt = Date.now();
     // events 不影响排盘，是校准信息 → 合并去重保留（避免重填丢失历史校准事件）
     existing.baziInput.events = mergeEvents(prevEvents, input.events);
-    if (!p.primaryPersonaId) p.primaryPersonaId = existing.id;
     save(p);
     return existing.id;
   }

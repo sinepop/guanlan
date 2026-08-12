@@ -4,6 +4,18 @@
 
 ## 当前状态（2026-08-12）
 
+### 对抗式审查 v2 + P0-D 修复（2026-08-12，迭代二审查）
+
+针对迭代二（agent 主体之后的 5 个 commit：events 合并 bug 修复 / P1-1 单字歧义 / P1-3/5/6 / 文档同步 / BLOCKED 清理）发起第二轮对抗式审查。
+
+- **审查产出**：`REVIEW-opencode-v2.md`（执行者独立 pass，1 P0 + 11 P1）+ `REVIEW-codex-v2.md`（透明记录 codex 本轮实际复述了 v1，未做独立 v2 审查）。
+- **P0-D（必修，已修）**：`inferFocus` 在 bazi 页每次提交都触发，不幂等。重复提交（修时辰/性别/地点）会让 events 命中维度权重无限累加，覆盖真实最近关注（来自 ask 问题）。实测：5 次提交 events="2020年结婚" + 1 次 ask 工作问题 → focus.love=5 vs focus.career=1 → getTopFocus 错误返回 love。
+  - **修复**：采用第一性原理方案——focus 仅来自「用户当下问什么」（ask 问题），events 反映「过去经历过什么」不应污染 focus。删除 bazi/page.tsx 里 `inferFocus(evtText)` 调用。
+  - **回归保护**：verify-agent.mjs 加 P0-D-v2 测试（events 提交后 focus 状态应不变）。
+- **P1 顺手修**：memory.ts:156 死代码删除；verify-agent.mjs 场景 4 死代码清理；verify-agent.mjs 加 P0-3c 横幅不暴露关注维度名断言。
+- **P1 入 TODO**：11 项（引用污染 / 测试覆盖空洞 / journal 多维度不一致 / P1-3 实质未兑现 / 关键词遗漏 / 关注维度隐私 / 单元测深度不足等）。
+- **方法论副产品**：本轮是一次审查工具调用失败的案例——codex 本轮主动读了旧 REVIEW-codex.md 然后复述，没做真正的 v2 独立审查。透明记录在 REVIEW-codex-v2.md，下次审查 Prompt 要显式禁止读旧 REVIEW。
+
 ### Agent 智能体化：语义记忆层 + 应验评估闭环 + 对抗式审查 + 运行时验证（2026-08-12）
 
 第一性原理推导 → 三层架构（确定性排盘 + 记忆层 + ACI 置信度）→ 实现对抗式审查 → 运行时端到端验证。
