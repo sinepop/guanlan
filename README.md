@@ -41,6 +41,8 @@ Four entrances: **Daily Fortune → Divination (Plum Blossom) · Mingli (Bazi/Zi
 ## 架构亮点 · Highlights
 
 - **确定性优先**：八字/紫微/梅花全部前端规则引擎排盘，AI 只做解读，绝不显示假 AI；梅花起卦不用 `Math.random`，同刻+同念必同卦。
+- **语义记忆层**：localStorage 固化排盘为 persona slots（指纹含 calendar/timeMode/shichenIndex/hour），老用户进站不必重填生辰；首页一键排盘不暴露完整出生年月日；多角色（自己/家人）+ 关注维度学习（事业/感情/财运/健康）。
+- **应验评估闭环**：应验簿按维度拆分应验率，已结案统计（排除 pending），单一真相源（saveEntry 自动推断维度）。
 - **可信度系统**：节气边界/子时换日/真太阳时校正输出 high/medium/low/review，结果页附依据与警告。
 - **密钥安全**：AI 后端无密钥，云函数内 origin 白名单控制访问。
 
@@ -52,6 +54,7 @@ npm install
 npm run dev        # http://localhost:3000
 npm run build      # 静态导出到 out/（含 TS 类型检查）
 npm run lint       # ESLint
+npm test           # 单元测（Node 24 零依赖直跑 .ts）+ 端到端（playwright-core）
 ```
 
 ## 部署 · Deployment

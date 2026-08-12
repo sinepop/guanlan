@@ -18,7 +18,8 @@
 - **运行时验证（关键）**：`scripts/verify-agent.mjs` —— playwright-core 端到端 12 断言，全过。技术细节：`page.route` 把 `/divining` `/result` 表单跳转 fulfill 成首页 HTML（localStorage 跨页持久），避开 setTimeout 跳转中断测试的 race。
 - **运行时验证抓到审查未发现的 bug**（印证 AGENTS.md 红线「无浏览器环境不要声称验收通过」）：`memory.ts:129` events 合并顺序 bug —— `existing.baziInput = input` 先把 events 覆盖成 input 的空数组，**然后**才算 `mergeEvents(existing.baziInput.events, input.events)`，两个入参都是 input 的空 events，历史校准事件永远丢。修复：先存 `prevEvents`，覆盖后 `mergeEvents(prevEvents, input.events)`。**对抗式审查（codex + opencode 两轮）都没抓到，运行时验证才暴露**。
 - **Obsidian 写回**：`6-projects/观澜-设计决策.md`（项目记忆正本，5 个设计决策 + 审查产物表格）+ 更新 `AGENT_INDEX.md`/`ACTIVE_CONTEXT.md`。
-- **状态**：build 14/14 绿；lint 仅 1 既有 warning；verify 12/12 绿。commit `f7e2d8f`（agent 化主体）未 push；本次运行时 bug 修复 + 验证脚本沉淀 + TODO/PROGRESS 同步**待 commit**。
+- **状态**：build 14/14 绿；lint 仅 1 既有 warning；`npm test` = 14 单元测 + 33 端到端 = 47/47 全过。5 个 commit 已推 GitHub `sinepop/guanlan`：`c65a258`（开源首提交）→ `f7e2d8f`（agent 主体）→ `cd0584f`（events 合并顺序 bug 修复）→ `b1ed131`（P1-1 单字歧义）→ `d49bc1e`（P1-3/5/6 + 零依赖单元测）。
+- **完成度**：P0 4/4、P1 11/12（仅 P1-9 storage adapter 留给迁云阶段）、P2/P3-1 前端契约 + 云函数 spec 已出（设计文档附录，等云函数侧实现）。
 - **开放**：P3-1 维度应验率反馈 LLM（需云函数消费）；P2 追问循环（需云函数加 `/followup`）；P1-1 focus 关键词单字误判（「合」/「工」）；迁小程序后 localStorage → CloudBase `agent_memories` 集合。
 
 ## 历史里程碑
