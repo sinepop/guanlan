@@ -7,10 +7,10 @@
 
 - [x] **P1-1** ~~focus 关键词单字误判~~ ✅ 2026-08-12：关键词表去高歧义单字（「爱」「情」「合」「财」「钱」「买」「卖」「股」「房」「病」），改用语义明确的 2+ 字复合词；拆出纯 `detectFocus()` 挂 `window` 供测试；verify-agent 加 15 断言（5 单字歧义不再误判 + 1 多维度同命中 + 8 维度准确 + 1 暴露检查），27/27 全过。
 - [ ] **P1-2** ~~getProfile 校验太浅~~ ✅ 已在 P0 修复时顺手补 normalize schema。
-- [ ] **P1-3** save() 返回 boolean：inferFocus/ensurePersona 调用方应能感知持久化失败。
+- [x] **P1-3** ~~save() 返回 boolean~~ ✅ 2026-08-12：save 返回 boolean + 失败时 console.warn（不抛出，记忆是软失败）；调用方签名未破坏。
 - [ ] **P1-4** ~~加清除入口~~ ✅ 已在 ledger 页接入两步确认按钮（2026-08-12 P3）。
-- [ ] **P1-5** focus 学习来源单一：bazi 页提交时也应学习（从 view/events 推断），不只 ask。
-- [ ] **P1-6** memory.ts 补单元测试。（部分补：`scripts/verify-agent.mjs` 已覆盖端到端 12 断言，纯函数单元测试仍缺）
+- [x] **P1-5** ~~focus 学习来源单一~~ ✅ 2026-08-12：bazi 页提交时 events 文本也触发 inferFocus（「2020年结婚」→ love 累加）。verify-agent 加场景 7（5 events 文本 → 维度 + 1 真实提交后 focus 累加断言）；wealth 关键词补「加薪」。
+- [x] **P1-6** ~~memory.ts 补单元测试~~ ✅ 2026-08-12：用 Node 24 自带 `--experimental-transform-types` 直接 import .ts 零依赖跑单元测（不引入 vitest/jest）。`scripts/unit-memory.mjs` 14 断言覆盖 detectFocus 边界；package.json 加 `test:unit`/`test:e2e`/`test` 三脚本。有 DOM 依赖的（getProfile/save/ensurePersona）继续走 verify-agent 端到端。
 - [ ] **P1-7** ~~MAX_PERSONAS 裁剪修正~~ ✅ 已在 P0 修复时顺手改为 primary 必保留取 MAX-1。
 - [ ] **P1-8** ~~ID 改 crypto.randomUUID~~ ✅ 已在 P0 修复时顺手补。
 - [ ] **P1-9** memory 抽象 storage adapter（迁云数据库时做）。

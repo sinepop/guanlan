@@ -8,7 +8,7 @@ import { PROVINCES, DEFAULT_CITY } from "@/lib/locations";
 import { SHICHEN_NAMES, SHICHEN_RANGES } from "@/lib/solarTime";
 import { isValidLunarDate } from "@/lib/bazi";
 import { store } from "@/lib/store";
-import { ensurePersona, getPrimaryPersona } from "@/lib/memory";
+import { ensurePersona, getPrimaryPersona, inferFocus } from "@/lib/memory";
 import type { CalendarMode, TimeMode, BaziInput, DivinationView } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
@@ -149,6 +149,10 @@ export default function BaziPage() {
     window.setTimeout(() => {
       store.setBaziInput(input);
       ensurePersona(input); // 语义记忆：固化生辰为 persona slots（下次进站识别老用户）
+      // P1-5：events 也作为关注维度学习来源（如「2020年结婚」「2023年升职」）
+      // 用 events 触发 focus 学习，避免只依赖 ask 页问题文本
+      const evtText = input.events.filter((e) => e.trim()).join(" ");
+      if (evtText) inferFocus(evtText);
       window.location.href = "/divining";
     }, 450);
   }

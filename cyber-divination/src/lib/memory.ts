@@ -42,8 +42,8 @@ const FOCUS_KEYWORDS: Record<FocusDim, string[]> = {
   ],
   wealth: [
     "财运", "赚钱", "亏损", "投资", "理财", "股票", "基金", "买房", "卖房", "收入",
-    "破财", "还款", "负债", "财富", "涨薪", "存款", "债务", "还钱", "金钱", "财务",
-    "中彩票", "还债",
+    "破财", "还款", "负债", "财富", "涨薪", "加薪", "存款", "债务", "还钱", "金钱",
+    "财务", "中彩票", "还债",
   ],
   health: [
     "生病", "健康", "身体", "手术", "怀孕", "生产", "康复", "体检", "症状", "调理",
@@ -126,12 +126,18 @@ function normalizeFocus(f: unknown): Record<FocusDim, number> {
   return out;
 }
 
-function save(p: UserProfile): void {
+function save(p: UserProfile): boolean {
   try {
     p.updatedAt = Date.now();
     localStorage.setItem(KEY, JSON.stringify(p));
-  } catch {
-    /* ignore */
+    return true;
+  } catch (e) {
+    // localStorage 满 / disabled（隐私模式）/ JSON 循环引用等
+    // 不抛出（记忆持久化是软失败：本次会话 store 仍能用，下次访问恢复失败用户也能感知）
+    if (typeof console !== "undefined" && console.warn) {
+      console.warn("[memory] save 失败，记忆将无法在下次访问恢复", e);
+    }
+    return false;
   }
 }
 
@@ -214,6 +220,9 @@ export function inferFocus(question: string): FocusDim[] {
 }
 
 // 暴露纯函数给运行时端到端测试（无副作用，无安全风险）
+// 注：webpack tree-shake 会移除未被业务代码引用的导出，所以这里只暴露已被
+// 业务路径引用的 detectFocus（被 inferFocus 调用）。其它纯函数通过端到端
+// 业务场景间接验证（见 verify-agent.mjs P1-6 场景）
 if (typeof window !== "undefined") {
   (window as unknown as { detectFocus?: typeof detectFocus }).detectFocus = detectFocus;
 }

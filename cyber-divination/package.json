@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:unit": "node --experimental-transform-types scripts/unit-memory.mjs",
+    "test:e2e": "node scripts/verify-agent.mjs",
+    "test": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "iztro": "^2.5.8",
