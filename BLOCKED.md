@@ -14,6 +14,7 @@ agent 智能体化（2026-08-12）收官后无 P0/P1 阻塞。所有已解决项
 
 ### 设计权衡记录（有意保留）
 
+- **前端托管选型 —— Cloudflare Pages 维持不变（2026-08-12 复盘）**：曾考虑迁全栈到腾讯云（EdgeOne Makers / COS + CDN）以解决国内访问速度。但用户无 ICP 备案自定义域名且不愿走备案流程，而无备案情况下腾讯云国内 CDN 加速路径**被国内法规锁死**（EdgeOne 选「含大陆」区域强制要求 ICP，自定义域名页文档原文：*"When the acceleration region of a project is 'Chinese mainland availability zone' or 'global availability zone (including Chinese mainland)', the added domain must first complete registration with the ICP."*）。选「不含大陆」区域则节点在海外，国内访问速度与 Cloudflare 不会有质差（腾讯海外节点反而少于 Cloudflare）。结论：**无备案迁移腾讯云收益存疑，维持 Cloudflare Pages 现状**。若未来接受备案，EdgeOne Makers「全球（含大陆）」+ 自定义域名是首选迁移路径（控制台统一、与 CloudBase 同 region 可走内网）。
 - **分享按钮 vs 任务书「不许加分享」**：分享按钮在 `compat-result/page.tsx`（合盘结果页）保留，是用户已交付 UI 的一部分。任务书「不许加分享」与「测一次分享按钮」存在内部矛盾，按「看得懂 > 做得全 > 做得快」原则保留。若领导明确去掉，删除 `compat-result/page.tsx` 的 `share()` 与按钮即可。
 - **结果页卡片文案**：V3 已改为数据驱动 + AI 生成（含依据/置信度），前端模板仅作 AI 不可用时的兜底——非阻塞。
 
