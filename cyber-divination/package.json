@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test:unit": "node --experimental-transform-types scripts/unit-memory.mjs",
+    "test:migration": "node --experimental-transform-types scripts/verify-migration.mjs",
     "test:e2e": "node scripts/verify-agent.mjs",
-    "test": "npm run test:unit && npm run test:e2e"
+    "test": "npm run test:unit && npm run test:migration && npm run test:e2e"
   },
   "dependencies": {
     "iztro": "^2.5.8",

@@ -32,7 +32,7 @@ function readAll(): JournalEntry[] {
     ).map((e) => {
       // 向后兼容（P1-v2-F）：旧版本 focus 是单值 FocusDim；新版本是 FocusDim[]
       const ef = (e as { focus?: unknown }).focus;
-      if (ef == null) return e;
+      if (ef == null) return { ...e, focus: undefined };  // null/undefined 统一归 undefined（避免三态）
       if (Array.isArray(ef)) return e;
       if (typeof ef === "string") return { ...e, focus: [ef as FocusDim] };
       return { ...e, focus: undefined };
