@@ -122,12 +122,12 @@ export function ensurePersona(input: BaziInput, label = "自己"): string {
   const fp = personaFingerprint(input);
   const existing = p.personas.find((x) => personaFingerprint(x.baziInput) === fp);
   if (existing) {
-    // 同一 persona：排盘字段用新值覆盖（用户更精确的输入应被采纳）
+    // 先保存覆盖前的 events（用于合并），再整体更新排盘字段
+    const prevEvents = existing.baziInput.events;
     existing.baziInput = input;
     existing.lastUsedAt = Date.now();
     // events 不影响排盘，是校准信息 → 合并去重保留（避免重填丢失历史校准事件）
-    const merged = mergeEvents(existing.baziInput.events, input.events);
-    existing.baziInput.events = merged;
+    existing.baziInput.events = mergeEvents(prevEvents, input.events);
     if (!p.primaryPersonaId) p.primaryPersonaId = existing.id;
     save(p);
     return existing.id;

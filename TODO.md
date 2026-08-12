@@ -10,10 +10,11 @@
 - [ ] **P1-3** save() 返回 boolean：inferFocus/ensurePersona 调用方应能感知持久化失败。
 - [ ] **P1-4** ~~加清除入口~~ ✅ 已在 ledger 页接入两步确认按钮（2026-08-12 P3）。
 - [ ] **P1-5** focus 学习来源单一：bazi 页提交时也应学习（从 view/events 推断），不只 ask。
-- [ ] **P1-6** memory.ts 补单元测试。
+- [ ] **P1-6** memory.ts 补单元测试。（部分补：`scripts/verify-agent.mjs` 已覆盖端到端 12 断言，纯函数单元测试仍缺）
 - [ ] **P1-7** ~~MAX_PERSONAS 裁剪修正~~ ✅ 已在 P0 修复时顺手改为 primary 必保留取 MAX-1。
 - [ ] **P1-8** ~~ID 改 crypto.randomUUID~~ ✅ 已在 P0 修复时顺手补。
 - [ ] **P1-9** memory 抽象 storage adapter（迁云数据库时做）。
+- [x] **P0-2b-runtime** ~~events 合并顺序 bug~~ ✅ 2026-08-12 运行时验证抓到：`existing.baziInput = input` 先覆盖再 merge，导致 merge 两边都是 input 的空 events，历史校准事件永远丢。修复为先存 `prevEvents` 再覆盖再 merge。**对抗式审查（codex+opencode 两轮）未抓到，运行时验证抓到**。
 
 ## 评估闭环（P3 已实现纯前端部分）
 
@@ -23,4 +24,4 @@
 
 - [x] **P1-10** ~~guanlan-agent-design.md 状态诚实化~~ ✅ 已标注（2026-08-12 P0 修复时）。
 - [ ] **P1-11** guanlan-agent-design.md 补 P3 应验闭环章节（评估闭环落地形态）。
-- [ ] **P1-12** 同步写回 Obsidian `6-projects/观澜-设计决策.md`（项目记忆正本，目前 Obsidian 无观澜笔记）。
+- [x] **P1-12** ~~同步写回 Obsidian~~ ✅ 2026-08-12 已建 `6-projects/观澜-设计决策.md` 并更新 `AGENT_INDEX.md`/`ACTIVE_CONTEXT.md`。

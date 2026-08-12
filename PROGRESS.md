@@ -2,7 +2,26 @@
 
 > 当前形态：Next.js 14 静态导出 + Cloudflare Pages，VNext 四入口升级（每日一签 / 占卜·梅花易数 / 命理 / 应验簿）+ AI 双后端解读。详见 `cyber-divination/README.md`。
 
-## 当前状态（2026-08-07）
+## 当前状态（2026-08-12）
+
+### Agent 智能体化：语义记忆层 + 应验评估闭环 + 对抗式审查 + 运行时验证（2026-08-12）
+
+第一性原理推导 → 三层架构（确定性排盘 + 记忆层 + ACI 置信度）→ 实现对抗式审查 → 运行时端到端验证。
+
+- **设计正本**：`docs/guanlan-agent-design.md`（gitignored）—— PEAS 分析 + MVP 路径。
+- **P0 修复（审查产物）**：
+  - ACI 字段接入：`divining/page.tsx` payload 加 `confidence`/`timeMode`；标注「前端就绪，待云函数对接」。
+  - 记忆四端接通：首页一键排盘（restorePrimaryToStore → 跳推演，弱提示不暴露生辰）；bazi 页进入时从 persona 恢复表单；compat fillFromMine 优先持久记忆；`/divine` `/ask` payload 加 `memory.focus`。
+- **P1 语义记忆层**：`src/lib/memory.ts` 全新 —— persona 固化生辰 slots + focus 关注维度学习 + 多角色；指纹纳入 calendar/timeMode/shichenIndex/hour + events 合并去重；getProfile schema normalize；crypto.randomUUID；MAX_PERSONAS 裁剪保留 primary。
+- **P3 应验评估闭环**：`journal.ts` 加 `focus?: FocusDim`，saveEntry 自动推断维度（单一真相源）；`ledger/page.tsx` 加应验率（verified/已结案）+ 按维度拆分 + 清除记忆按钮（两步确认）。
+- **对抗式审查**：`REVIEW-codex.md`（外部 codex）+ `REVIEW-opencode.md`（执行者独立 pass + 对抗验证综合）；4 P0 全修；P1 清单见 `TODO.md`。
+- **运行时验证（关键）**：`scripts/verify-agent.mjs` —— playwright-core 端到端 12 断言，全过。技术细节：`page.route` 把 `/divining` `/result` 表单跳转 fulfill 成首页 HTML（localStorage 跨页持久），避开 setTimeout 跳转中断测试的 race。
+- **运行时验证抓到审查未发现的 bug**（印证 AGENTS.md 红线「无浏览器环境不要声称验收通过」）：`memory.ts:129` events 合并顺序 bug —— `existing.baziInput = input` 先把 events 覆盖成 input 的空数组，**然后**才算 `mergeEvents(existing.baziInput.events, input.events)`，两个入参都是 input 的空 events，历史校准事件永远丢。修复：先存 `prevEvents`，覆盖后 `mergeEvents(prevEvents, input.events)`。**对抗式审查（codex + opencode 两轮）都没抓到，运行时验证才暴露**。
+- **Obsidian 写回**：`6-projects/观澜-设计决策.md`（项目记忆正本，5 个设计决策 + 审查产物表格）+ 更新 `AGENT_INDEX.md`/`ACTIVE_CONTEXT.md`。
+- **状态**：build 14/14 绿；lint 仅 1 既有 warning；verify 12/12 绿。commit `f7e2d8f`（agent 化主体）未 push；本次运行时 bug 修复 + 验证脚本沉淀 + TODO/PROGRESS 同步**待 commit**。
+- **开放**：P3-1 维度应验率反馈 LLM（需云函数消费）；P2 追问循环（需云函数加 `/followup`）；P1-1 focus 关键词单字误判（「合」/「工」）；迁小程序后 localStorage → CloudBase `agent_memories` 集合。
+
+## 历史里程碑
 
 ### 功能页背景素材换代 + 全局分散光晕 + 玻璃按钮 + 每日一签圆盘（2026-08-07，用户两轮反馈）
 
