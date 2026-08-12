@@ -43,12 +43,26 @@ agent 智能体化（2026-08-12）收官后无 P0/P1 阻塞。所有已解决项
 
 ## 环境备注
 
+### CloudBase HTTP 网关 15s 上限（硬约束，必读）
+
+- **CloudBase HTTP 网关（tcbgw）默认上游超时 15s**（实测固定值，不可在控制台改）。
+- **函数超时配置 ≠ 网关超时**：函数超时可改（控制台 → 函数服务 → guanlan → 函数配置 → 超时时间，当前 60s），但即使函数跑完 60s，网关 15s 到点就截断。
+- **node-sdk 的 cloud.init({ timeout }) 默认 15000ms**（在 `node_modules/@cloudbase/node-sdk/dist/utils/utils.js:100` 默认值）。云函数代码里已显式传 `timeout: 50000`。
+- **修复方案（2026-08-12 已实施）**：
+  1. 云函数代码里加 `Promise.race` + 13.5s 上限守卫（`MODEL_TIMEOUT_MS = 13500`），主动超时比被动被截更友好。
+  2. **简化 prompt**：八字解读的 `SYSTEM_PROMPT` 从 142 字 → 60 字，`OUTPUT_FMT` 从 510 字 → 215 字，`buildBaziPrompt` 砍掉藏干/纳音/空亡/三垣/神煞等细节字段。实测简化后混元 hy3 单次调用 ~10s 内完成（原 ~14s+ 必超时）。
+  3. 删掉原双重调用机制（15s 内根本没时间重试）。
+  4. `max_tokens` 从 1600 降到 800（实测够用，不影响输出质量）。
+- **诊断脚本**：`scripts/verify-prod-ai.mjs` 在每次部署后必须跑一次，验证 `/divine` `/ask` 都能在 15s 内返回 200。
+- **如果未来又出现 divine 502**：先用 `verify-prod-ai.mjs` 看 `_diag` 字段确认是否 `model_timeout` 触发，是的话说明 prompt 又变长了，需要继续精简或换更快的模型。
+
 ### 生产部署
 
 - **生产域名**：`cyber-divination-7e4.pages.dev`（`cyber-divination.pages.dev` 为旧项目，勿混淆）。
 - **当前生产部署**：Cloudflare Pages 静态托管；AI 后端迁至腾讯云 CloudBase HTTP 云函数 `guanlan`（混元 hy3），前端通过 `src/lib/api.ts` 的 `AI_BASE_URL` 直连 `https://kaifa-d1gdl3ow4ec39065b.service.tcloudbase.com/api`。
 - **部署命令**：`npm run build` → `npx wrangler pages deploy out --project-name cyber-divination --branch main`。
-- **CloudBase 云函数部署**：`tcb fn deploy guanlan -e kaifa-d1gdl3ow4ec39065b --runtime Nodejs20.19 --httpFn --path /api --force`。HTTP 网关路由必须用具体域名 + `WEB_SCF` 类型，通配符 `*` 会报 `FUNCTIONS_PARAM_INVALID`。`scf_bootstrap` 的 node 路径必须是 `/var/lang/node20/bin/node`（不带小版本号）。
+- **CloudBase 云函数部署**：`tcb fn deploy guanlan -e kaifa-d1gdl3ow4ec39065b --runtime Nodejs20.19 --httpFn --path /api --force`。HTTP 网关路由必须用具体域名 + `WEB_SCF` 类型，通配符 `*` 会报 `FUNCTIONS_PARAM_INVALID`。`scf_bootstrap` 的 node 路径必须是 `/var/lang/node20/bin/node`（不带小版本号）。**代码已纳入仓库 `cyber-divination/functions/guanlan/`（2026-08-12 起）**，从仓库根目录部署：`cd cyber-divination && tcb fn deploy guanlan -e kaifa-d1gdl3ow4ec39065b --runtime Nodejs20.19 --httpFn --path /api --force`。部署后会自动 npm install 函数目录的 `package.json`。
+- **每次部署云函数后必须跑** `node --experimental-transform-types scripts/verify-prod-ai.mjs` 验证生产 AI 解读能正常返回。如果有任何 ✗，看响应 `_diag` 字段确认根因。
 
 ### 配置约束
 
