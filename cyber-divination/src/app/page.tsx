@@ -4,14 +4,19 @@ import { useEffect, useState } from "react";
 import Particles from "@/components/Particles";
 import GoldIcon from "@/components/GoldIcon";
 import { getTodaySign } from "@/lib/signs";
+import { getPrimaryPersona, getPersonaHint, restorePrimaryToStore } from "@/lib/memory";
+import { store } from "@/lib/store";
 
 export default function HallPage() {
   const [today, setToday] = useState<{ dateStr: string; sign: { number: string; title: string; advice: string } } | null>(null);
+  const [personaHint, setPersonaHint] = useState<string>("");
 
   // 首页每日一签小卡：今天求过签才显示
   useEffect(() => {
     const t = getTodaySign();
     if (t) setToday({ dateStr: t.dateStr, sign: { number: t.sign.number, title: t.sign.title, advice: t.sign.advice } });
+    // 语义记忆可见化：仅展示弱提示（不暴露生辰，审查 P0-3），完整画像放内页
+    if (getPrimaryPersona()) setPersonaHint(getPersonaHint());
   }, []);
 
   return (
@@ -32,6 +37,23 @@ export default function HallPage() {
             察时变而观其<span className="text-cinnabar">源</span>
           </p>
         </header>
+
+        {/* 老用户一键继续排盘（语义记忆驱动交互流，审查 P0-1）+ 弱提示不暴露生辰（P0-3） */}
+        {personaHint && (
+          <button
+            className="mb-5 flex w-full items-center gap-3 rounded-card border border-gold/25 bg-gold/[0.06] px-4 py-3 text-left transition hover:border-gold/50"
+            onClick={() => {
+              // 一键继续排盘：恢复 persona 生辰到 store → 跳推演页，让记忆真正影响交互
+              if (restorePrimaryToStore(store.setBaziInput)) {
+                window.location.href = "/divining";
+              }
+            }}
+          >
+            <span className="type-title shrink-0 text-sm text-gold-light">欢迎回来</span>
+            <span className="type-caption flex-1 truncate text-mist">{personaHint}</span>
+            <span className="type-caption shrink-0 text-mist-dim">一键排盘 →</span>
+          </button>
+        )}
 
         {/* 每日一签（最大入口，置顶；标题组件在左，抽签展示在右） */}
         <button

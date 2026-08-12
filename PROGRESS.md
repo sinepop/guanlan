@@ -241,12 +241,11 @@ V3 MVP 核心功能全部落地，**且已通过真实运行时验证**（此前
 ## 续接注意事项
 
 - 老版本会话的 PROGRESS.md 历史段已被合并；本文件是唯一进度文档。
-- 密钥相关：ARK_API_KEY / ZEN_API_KEY 仅存在于 Cloudflare secret env；防刷和限流逻辑在 `functions/api/divine.ts`，有 pull 版改 `ALLOWED_ORIGINS`。
-- AI 后端（2026-08-04 新增 dual-backend）：`lib/zen.ts` 的 `resolveProvider()` 按 `AI_PROVIDER` 选择，默认 `ark`（火山方舟 plan / `ark-code-latest`，Auto 模式按「效果+速度」自动选模型，OpenAI 兼容 `https://ark.cn-beijing.volces.com/api/plan/v3`）；`AI_PROVIDER=zen` 切回旧 DeepSeek。改后端只换 env，提示词不变。切模型在火山方舟控制台改 `ARK_MODEL`，3-5 分钟生效，与限流无关。
-- 速度优化（2026-08-04 实测）：完整命盘单请求 21.2s → 8.8s（2.4 倍）。两招：① Ark plan 端点接受 `thinking:{type:"disabled"}`，关推理省 ~7s（base 5.1s→0.8s；注意 `reasoning_effort` 无效且会截断，别用）；② 精简提示词输出要求（每卡 2-3 条×20-40 字、总输出≤1000 字）。剩余 ~8s 基本是模型生成成本，欲再快需换更快 plan（违背「模型不变」）。
-- 输出兜底（2026-08-04）：`ark-code-latest` Auto 模式偶发产出缺 `liuNian`/`advice`/卡片的 JSON → `generateAnalysis` 内 `isComplete()` 判空 + 重试一次；`max_tokens` 用 2500（thinking 已禁用，此上限纯输出预算，1500 会截断末尾字段）。
-- 本地冒烟：`.dev.vars`（已 gitignore）存 `AI_PROVIDER=ark` + `ARK_API_KEY`，可 `npx wrangler pages dev` 或直接 node 调 `generateAnalysis`。
+- AI 后端（2026-08-12 迁移到腾讯云 CloudBase）：云函数 `guanlan` 部署在环境 `kaifa-d1gdl3ow4ec39065b`，用混元 hy3 模型（成长计划免费 Token 额度）。前端通过 `src/lib/api.ts` 的 `AI_BASE_URL` 直连 `https://kaifa-d1gdl3ow4ec39065b.service.tcloudbase.com/api`。已删除 Cloudflare Pages Functions（`functions/`）和 `lib/zen.ts`。
+- 云函数部署：`tcb fn deploy guanlan -e kaifa-d1gdl3ow4ec39065b --runtime Nodejs20.19 --httpFn --path /api --force`。HTTP 网关路由必须用**具体域名**（`kaifa-d1gdl3ow4ec39065b-1451574772.ap-shanghai.app.tcloudbase.com`）+ `WEB_SCF` 类型，通配符 `*` 会报 `FUNCTIONS_PARAM_INVALID`。`scf_bootstrap` 的 node 路径必须是 `/var/lang/node20/bin/node`（不带小版本号）。
+- 提示词/校验/normalize 逻辑已搬入云函数（独立于本仓库）。改提示词改云函数代码后重新部署。HTTP 网关上限 60s，`max_tokens` 用 1600 确保响应不超时。
+- Cloudflare Pages 环境变量已清空（`ZEN_API_KEY` 已删）。
 - 提示词补齐（2026-08-04）：对齐《DeepSeek 观澜.docx》最强全能主提示词。① 系统提示补全经典书目《子平真诠》《神峰通考》《千里命稿》+盲派技法；② 前端已算好的权威数据接进 API 请求：神煞 `shenSha`、五行能量 `five`(0-100)、胎元/命宫/身宫 `taiYuan/mingGong/shenGong`，模型直接解读不重复排盘；③ `divine.ts` 新增 `validExtra` 形状校验（神煞≤12个×限长、五行 0-100 数字、三垣限长）防注入。
 - 三视角（2026-08-04 上线）：`/bazi` 顶部切换 `bazi`（八字综合）/`ziwei`（紫微斗数）/`career`（职场事业），`lib/zen.ts` 的 `buildUserPrompt` 三分支，共用 `OUTPUT_FMT` 保证输出结构恒为 `AiAnalysis`。**紫微集成 iztro 引擎在前端排盘**（`src/lib/ziwei.ts`，与八字共用真太阳时校正时刻，十二宫/主星庙旺/四化/命主身主/五行局/大限），不再让模型自排（验证发现模型自排必编造）。`divine.ts` 校验 `view` 白名单。已实测三视角均产出完整结构。
-- 速度波动（2026-08-04 实测）：`ark-code-latest` plan 的 Auto 模式按「效果+速度」自动选模型，单请求耗时抖动明显（实测 8.8s~37s）。这是 plan 特性，非代码问题；若要稳定低延迟需固定到具体模型（违背「模型不变」）。
+- 速度波动（2026-08-04 实测，仅 ark 时期记录）：单请求耗时抖动明显（实测 8.8s~37s），为计划方案 Auto 模式特性；移除 ark 后不再适用。
 - 三视角对抗式审查（2026-08-04 第二轮，Claude Code 执行修复 + opencode 完成验证）：发现并修复 4 项 —— ① CRITICAL `ziwei.ts` 农历输入未转公历直接排盘（约半数农历用户拿错盘），已按 bazi 引擎分流 `Lunar→getSolar()`；② HIGH `divine.ts` 未校验 `ziwei` 字段（提示词注入/成本放大），已加 `MAX_ZIWEI_LEN=3000`；③ MED 重试-once 与 60s 客户端超时叠加（最坏 120s→502），已按耗时 <25s 才重试；④ LOW `nominalAge` 硬编码 2026（年底漂移+大限错位），已改 `new Date().getFullYear()`。opencode 复验：公历/农历同刻命宫一致（丁亥 天梁陷）、三组命例四柱逐字一致、`npm run build` 通过。

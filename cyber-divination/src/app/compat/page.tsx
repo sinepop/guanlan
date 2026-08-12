@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import ErrorBanner from "@/components/ErrorBanner";
 import PersonForm, { type FillFn, type ReadFn } from "@/components/PersonForm";
 import { store } from "@/lib/store";
+import { getPrimaryPersona } from "@/lib/memory";
 import type { CompatInput } from "@/lib/types";
 
 const RELATIONS = [
@@ -23,9 +24,11 @@ export default function CompatPage() {
   const bRead = useRef<ReadFn | null>(null);
 
   function fillFromMine() {
-    const mine = store.getBaziInput();
+    // 第一性原理：持久记忆优先，易失 sessionStorage 兜底（老用户重开浏览器也能用）
+    // 审查 P0-1：记忆必须能影响交互流，compat 是 persona 应用的第二现场
+    const mine = getPrimaryPersona()?.baziInput ?? store.getBaziInput();
     if (!mine) {
-      setError("还没有做过八字排盘，请先在大厅完成一次八字排盘后再填入本人信息。");
+      setError("还没有保存过命盘，请先在大厅完成一次八字排盘后再填入本人信息。");
       return;
     }
     setError("");

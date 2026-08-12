@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Particles from "@/components/Particles";
 import Header from "@/components/Header";
 import ErrorBanner from "@/components/ErrorBanner";
@@ -8,6 +8,7 @@ import { PROVINCES, DEFAULT_CITY } from "@/lib/locations";
 import { SHICHEN_NAMES, SHICHEN_RANGES } from "@/lib/solarTime";
 import { isValidLunarDate } from "@/lib/bazi";
 import { store } from "@/lib/store";
+import { ensurePersona, getPrimaryPersona } from "@/lib/memory";
 import type { CalendarMode, TimeMode, BaziInput, DivinationView } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
@@ -41,6 +42,38 @@ export default function BaziPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorField, setErrorField] = useState<string | null>(null);
+  const [showRestore, setShowRestore] = useState(false);
+
+  // 老用户进入 bazi 页且表单为空时，提示从已存命盘恢复（审查 P0-1：记忆影响交互流）
+  useEffect(() => {
+    if (!year && getPrimaryPersona()) setShowRestore(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function restoreFromMemory() {
+    const persona = getPrimaryPersona();
+    if (!persona) return;
+    const b = persona.baziInput;
+    setCalendar(b.calendar);
+    setYear(String(b.year));
+    setMonth(String(b.month));
+    setDay(String(b.day));
+    setTimeMode(b.timeMode);
+    if (b.timeMode === "shichen") setShichenIndex(b.shichenIndex);
+    if (b.timeMode === "exact") {
+      setHour(String(b.hour ?? ""));
+      setMinute(String(b.minute ?? 0));
+    }
+    setGender(b.gender);
+    setEvents(b.events.length ? [...b.events] : [""]);
+    // location 格式 "province city" 反向拆解（找不到则不阻塞，推演只看 lon/lat 已在 baziInput）
+    const [p, c] = (b.location || "").split(" ");
+    if (p && c && PROVINCES.some((x) => x.name === p)) {
+      setProvince(p);
+      setCity(c);
+    }
+    setShowRestore(false);
+  }
 
   const provinceCities = PROVINCES.find((p) => p.name === province)?.cities ?? [];
 
@@ -115,6 +148,7 @@ export default function BaziPage() {
     // 让 spinner/文案先渲染一拍，再跳推演页，避免「点了没反应」
     window.setTimeout(() => {
       store.setBaziInput(input);
+      ensurePersona(input); // 语义记忆：固化生辰为 persona slots（下次进站识别老用户）
       window.location.href = "/divining";
     }, 450);
   }
@@ -125,6 +159,18 @@ export default function BaziPage() {
       <Particles count={30} />
       <div className="page-shell">
         <Header />
+
+        {/* 老用户记忆恢复（审查 P0-1：让记忆影响交互流，不只展示） */}
+        {showRestore && (
+          <button
+            className="mb-4 flex w-full items-center gap-3 rounded-card border border-gold/25 bg-gold/[0.06] px-4 py-3 text-left transition hover:border-gold/50"
+            onClick={restoreFromMemory}
+          >
+            <span className="type-title shrink-0 text-sm text-gold-light">已保存命盘</span>
+            <span className="type-caption flex-1 text-mist">检测到你的记录，点击一键填入</span>
+            <span className="type-caption shrink-0 text-mist-dim">填入 →</span>
+          </button>
+        )}
 
         {/* 分析视角切换 */}
         <div className="mb-5">

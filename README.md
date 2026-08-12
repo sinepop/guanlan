@@ -36,13 +36,13 @@ Four entrances: **Daily Fortune → Divination (Plum Blossom) · Mingli (Bazi/Zi
 - **Tailwind CSS 3.4**；自托管得意黑 SmileySans 字体（OFL 开源）
 - **lunar-javascript** 八字排盘（立春定年 / 节气定月 / 晚子时换日 / 真太阳时）
 - **iztro** 引擎前端紫微排盘（十二宫 / 星曜庙旺 / 四化 / 大限）
-- **Cloudflare Pages + Functions** 代理 AI 后端（默认火山方舟，可切 DeepSeek/Zen）
+- **腾讯云 CloudBase 云函数** AI 后端（混元 hy3，小程序成长计划免费 Token 额度）
 
 ## 架构亮点 · Highlights
 
 - **确定性优先**：八字/紫微/梅花全部前端规则引擎排盘，AI 只做解读，绝不显示假 AI；梅花起卦不用 `Math.random`，同刻+同念必同卦。
 - **可信度系统**：节气边界/子时换日/真太阳时校正输出 high/medium/low/review，结果页附依据与警告。
-- **密钥安全**：仓库不含任何密钥，AI Key 只存于 Cloudflare 加密环境变量。
+- **密钥安全**：AI 后端无密钥，云函数内 origin 白名单控制访问。
 
 ## 快速开始 · Quick Start
 
@@ -62,15 +62,16 @@ npx wrangler pages deploy out --project-name cyber-divination --branch main
 ```
 
 - 生产分支 `main`（`--branch main` 必带）
-- AI 后端通过 Cloudflare Pages Functions（`functions/api/divine.ts`、`functions/api/ask.ts`）代理，密钥为 Pages 加密环境变量。
+- AI 后端为腾讯云 CloudBase HTTP 云函数 `guanlan`，前端直连，无需代理层或密钥。
 
 ## AI 后端配置 · AI Backend
 
-| 变量 Env | 说明 |
+| 配置项 | 说明 |
 |---|---|
-| `AI_PROVIDER` | `ark`（默认，火山方舟）\| `zen`（DeepSeek/Zen） |
-| `ARK_API_KEY` | 火山方舟 Key（只存于服务端 env，仓库/浏览器不出现明文） |
-| `ZEN_API_KEY` | 切回 zen 时必填 |
+| 云函数 | `guanlan`（环境 `kaifa-d1gdl3ow4ec39065b`，成长计划个人版） |
+| 端点 | `https://kaifa-d1gdl3ow4ec39065b.service.tcloudbase.com/api/divine` · `/api/ask` |
+| 模型 | 混元 hy3（免费 Token 额度） |
+| 鉴权 | 云函数内 origin 白名单，无 API Key |
 
 ## 文档 · Docs
 

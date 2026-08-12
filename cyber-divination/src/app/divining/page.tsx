@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Particles from "@/components/Particles";
 import { computeBazi } from "@/lib/bazi";
+import { AI_BASE_URL } from "@/lib/api";
+import { getTopFocus } from "@/lib/memory";
 import { computeZiwei, serializeZiwei } from "@/lib/ziwei";
 import { store } from "@/lib/store";
 import type { BaziResult, AiAnalysis } from "@/lib/types";
@@ -135,8 +137,13 @@ export default function DiviningPage() {
         qiYunAge: res.qiYunAge,
         currentDaYun: { gan: res.currentDaYun.gan, zhi: res.currentDaYun.zhi, startYear: res.currentDaYun.startYear, endYear: res.currentDaYun.endYear },
         liuNian: res.liuNian.map((l) => ({ year: l.year, gan: l.gan, zhi: l.zhi, if: l.if })),
+        // ACI：确定性层的置信度必须显式传给 LLM（时辰未知/节气交界时让解读自动降级提示）
+        confidence: res.confidence,
+        timeMode: res.input.timeMode,
+        // 语义记忆进入 LLM 输入（审查 P0-1）：关注维度让解读侧重；后端不消费也向后兼容
+        memory: { focus: getTopFocus() },
       };
-      const r = await fetch("/api/divine", {
+      const r = await fetch(`${AI_BASE_URL}/divine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -6,6 +6,7 @@ import Particles from "@/components/Particles";
 import Header from "@/components/Header";
 import { Toast, useToast } from "@/components/Toast";
 import { getEntries, updateEntry, deleteEntry, type JournalEntry, type FollowUpStatus } from "@/lib/journal";
+import { clearProfile, FOCUS_LABEL, type FocusDim } from "@/lib/memory";
 
 const STATUS_META: Record<FollowUpStatus, { label: string; cls: string }> = {
   pending: { label: "待回顾", cls: "border-gold/30 bg-gold/10 text-gold-light" },
@@ -28,6 +29,7 @@ function fmtTime(ts: number): string {
 export default function LedgerPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const { toast, showToast } = useToast();
 
   const refresh = useCallback(() => {
@@ -53,10 +55,35 @@ export default function LedgerPage() {
     updateEntry(id, { note });
     refresh();
   }
+  function onClearMemory() {
+    if (!confirmClear) {
+      // 两步确认第一步：变成"再次点击确认"，3 秒后自动复原（不依赖浏览器原生对话框）
+      setConfirmClear(true);
+      window.setTimeout(() => setConfirmClear(false), 3000);
+      return;
+    }
+    clearProfile();
+    setConfirmClear(false);
+    showToast("命盘记忆已清除");
+  }
 
   const count = entries.length;
   const verifiedCount = entries.filter((e) => e.followUpStatus === "verified").length;
+  const refutedCount = entries.filter((e) => e.followUpStatus === "refuted").length;
   const pendingCount = entries.filter((e) => e.followUpStatus === "pending").length;
+  const closed = verifiedCount + refutedCount; // 已结案（排除 pending：未到验证时间不算分母）
+  // 应验率 = verified / 已结案（评估闭环核心指标：agent 准不准的自省信号）
+  const accuracy = closed > 0 ? Math.round((verifiedCount / closed) * 100) : null;
+
+  // 按维度拆分应验率（评估闭环深度：告诉用户事业/感情哪个维度更准）
+  const DIMS: FocusDim[] = ["career", "love", "wealth", "health"];
+  const dimStats = DIMS.map((d) => {
+    const subset = entries.filter((e) => e.focus === d);
+    const v = subset.filter((e) => e.followUpStatus === "verified").length;
+    const r = subset.filter((e) => e.followUpStatus === "refuted").length;
+    const c = v + r;
+    return { dim: d, total: subset.length, closed: c, acc: c > 0 ? Math.round((v / c) * 100) : null };
+  }).filter((x) => x.total > 0);
 
   return (
     <main className="bg-ledger relative min-h-screen">
@@ -72,7 +99,7 @@ export default function LedgerPage() {
 
         {/* 统计 */}
         <div className="glass-panel mb-4 rounded-card p-4">
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-4 gap-2 text-center">
             <div>
               <div className="type-title text-lg text-gold-light">{count}</div>
               <div className="type-caption">总记录</div>
@@ -82,11 +109,51 @@ export default function LedgerPage() {
               <div className="type-caption">有所应</div>
             </div>
             <div>
+              <div className="type-title text-lg text-cinnabar">{refutedCount}</div>
+              <div className="type-caption">未显现</div>
+            </div>
+            <div>
               <div className="type-title text-lg text-mist-dim">{pendingCount}</div>
               <div className="type-caption">待回顾</div>
             </div>
           </div>
+
+          {/* 应验率（评估闭环核心指标） */}
+          {accuracy !== null && (
+            <div className="mt-4 border-t border-gold/10 pt-3 text-center">
+              <div className="type-overline text-gold-light">应验率 {accuracy}%</div>
+              <div className="type-caption mt-1 opacity-70">
+                基于 {closed} 条已结案记录（有所应 / 未显现）。命理仅供自省，应验与否在个人选择。
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* 维度拆分（评估闭环深度：哪个维度更准） */}
+        {dimStats.length > 0 && (
+          <div className="glass-panel mb-4 rounded-card p-4">
+            <div className="card-title mb-3 text-sm">按关注维度</div>
+            <div className="space-y-2.5">
+              {dimStats.map((s) => (
+                <div key={s.dim} className="flex items-center gap-3">
+                  <span className="type-caption w-10 shrink-0 text-mist">{FOCUS_LABEL[s.dim]}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded bg-gold/10">
+                    <div
+                      className="h-full bg-gradient-to-r from-gold-dark to-gold-light transition-all"
+                      style={{ width: `${s.acc ?? 0}%` }}
+                    />
+                  </div>
+                  <span className="type-caption w-16 shrink-0 text-right text-mist-dim">
+                    {s.acc !== null ? `${s.acc}% · ${s.closed}条` : `${s.total}条待结案`}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="type-caption mt-3 opacity-60">
+              维度由问题关键词自动推断；历史记录无维度标注，仅新存档参与拆分。
+            </p>
+          </div>
+        )}
 
         {loaded && entries.length === 0 ? (
           <div className="glass-panel rounded-card p-10 text-center">
@@ -156,6 +223,18 @@ export default function LedgerPage() {
 
         <button className="mt-8 w-full rounded-lg border border-gold/25 py-3 text-sm tracking-[0.1em] text-gold-light transition hover:border-gold" onClick={() => (window.location.href = "/")}>
           返回大厅
+        </button>
+
+        {/* 清除命盘记忆（隐私合规：用户可撤回记忆；审查 P1-4） */}
+        <button
+          className={`mt-3 w-full rounded-lg border py-2.5 text-xs transition ${
+            confirmClear
+              ? "border-cinnabar bg-cinnabar/10 text-cinnabar"
+              : "border-gold/15 text-mist-dim hover:border-gold/30"
+          }`}
+          onClick={onClearMemory}
+        >
+          {confirmClear ? "再次点击以确认清除命盘记忆" : "清除命盘记忆（生辰画像）"}
         </button>
 
         <p className="type-caption mt-6 border-t border-gold/10 pt-4 text-center opacity-60">

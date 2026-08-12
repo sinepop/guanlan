@@ -9,8 +9,10 @@ import { Toast, useToast } from "@/components/Toast";
 import { castHexagram, serializeCast, parseCast } from "@/lib/meihua";
 import { deriveAskCredibility } from "@/lib/credibility";
 import { getRecent } from "@/lib/journal";
+import { getTopFocus } from "@/lib/memory";
 import { store } from "@/lib/store";
 import type { MeihuaResult, AiAskAnalysis } from "@/lib/types";
+import { AI_BASE_URL } from "@/lib/api";
 
 const TOPICS = ["工作", "感情", "项目", "二选一"];
 
@@ -97,12 +99,14 @@ export default function AskPage() {
     const timer = setTimeout(() => controller.abort(), 60000);
     setAiLoading(true);
     try {
-      const r = await fetch("/api/ask", {
+      const r = await fetch(`${AI_BASE_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           feature: "meihua_ask",
           question: calc.input.question,
+          // 语义记忆进入 LLM 输入（审查 P0-1）：关注维度让解读侧重
+          memory: { focus: getTopFocus() },
           calculation: {
             mainName: calc.mainName,
             changedName: calc.changedName,
@@ -145,6 +149,7 @@ export default function AskPage() {
       const res = castHexagram({ question: q, intention: int, now });
       setResult(res);
       storeCast(res);
+      // 关注维度由 SaveToJournal 存档时统一推断（单一真相源），这里不再双写
       requestAi(res);
     } catch {
       setPhase("form");

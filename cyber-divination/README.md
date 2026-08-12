@@ -1,6 +1,6 @@
 # 观澜（cyber-divination）
 
-玄黑 × 鎏金 × 朱砂新中式玄学平台。网站定名「观澜」（孟子·尽心上「观水有术，必观其澜」——观波澜而知其下、察变化而推其变）。Next.js 14 静态导出 + Cloudflare Pages Functions 代理 AI 后端（默认火山方舟 `ark-code-latest`，可切回 DeepSeek/Zen）。
+玄黑 × 鎏金 × 朱砂新中式玄学平台。网站定名「观澜」（孟子·尽心上「观水有术，必观其澜」——观波澜而知其下、察变化而推其变）。Next.js 14 静态导出 + 腾讯云 CloudBase 云函数 AI 后端（混元 hy3 模型，小程序成长计划免费额度）。
 
 VNext 后为四入口结构：**每日一签**（最大入口置顶）→ **占卜**（梅花易数）·**命理**（八字/紫微/合盘）并排 → **应验簿**（底部细窄入口）。
 
@@ -38,7 +38,7 @@ VNext 后为四入口结构：**每日一签**（最大入口置顶）→ **占�
 - Next.js 14.2（App Router，`output: "export"` 静态导出）
 - Tailwind CSS 3.4；字体自托管**得意黑 SmileySans**（OFL 开源、可商用可网页嵌入，`public/fonts/SmileySans-Oblique.ttf.woff2`），Noto Serif/Sans SC 走 Google Fonts 兜底
 - `lunar-javascript@1.7.7` 排盘（立春定年/节气定月/晚子时换日/真太阳时）；紫微用 iztro 引擎前端排盘
-- Cloudflare Pages + Functions：`functions/api/divine.ts`（八字/紫微）与 `functions/api/ask.ts`（梅花）代理 → 火山方舟 `ark-code-latest`（plan，Auto 模式）· 可切 DeepSeek/Zen
+- **腾讯云 CloudBase HTTP 云函数**：`guanlan`（`POST /api/divine` 八字/紫微、`POST /api/ask` 梅花易数），混元 hy3 模型（小程序成长计划免费额度），前端直连 `https://kaifa-d1gdl3ow4ec39065b.service.tcloudbase.com/api`
 
 ## 本地开发
 
@@ -57,28 +57,25 @@ src/lib/         bazi.ts 八字引擎（核心）；ziwei.ts 紫微引擎（iztr
                  compat.ts 合盘；credibility.ts 可信度；journal.ts 应验簿（localStorage）
                  solarTime.ts 真太阳时；locations.ts 34 省经纬度；signs.ts 每日签库
                  terms.ts 术语库；store.ts sessionStorage；types.ts 全部类型
-lib/             zen.ts 提示词 + AI 响应 normalize + 双后端解析（供 Cloudflare Function 调用）
+                 api.ts（AI_BASE_URL 云函数端点常量）
 types/           自定义 lunar-javascript 类型声明（lunar 包无自带 d.ts）
-functions/_shared.ts  origin 白名单 + 限流分桶 + 输入形状校验（共用）
-functions/api/divine.ts  /api/divine：八字/紫微/career
-functions/api/ask.ts      /api/ask：梅花易数
 ```
 
-## AI 后端配置（Cloudflare Pages 加密环境变量）
+## AI 后端配置（腾讯云 CloudBase 云函数）
 
-服务端 `lib/zen.ts` 的 `resolveProvider()` 按 `AI_PROVIDER` 选择后端，**默认 `ark`**（火山方舟 plan）：
+**云函数 `guanlan`** 部署在腾讯云 CloudBase 环境 `kaifa-d1gdl3ow4ec39065b`（个人版，成长计划赠送）。
 
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `AI_PROVIDER` | `ark` | `ark`（火山方舟 plan）\| `zen`（OpenCode Zen/DeepSeek） |
-| `ARK_API_KEY` | — | 火山方舟 API Key（必填，浏览器/代码仓库不得出现明文） |
-| `ARK_BASE_URL` | `https://ark.cn-beijing.volces.com/api/plan/v3` | OpenAI 兼容端点（`/chat/completions`） |
-| `ARK_MODEL` | `ark-code-latest` | plan 方案 ID，Auto 模式按「效果+速度」自动选模型 |
-| `ZEN_API_KEY` | — | 切回 zen 时必填 |
-| `ZEN_BASE_URL` | `https://opencode.ai/zen/v1` | 仅 `AI_PROVIDER=zen` 时生效 |
-| `ZEN_MODEL` | `deepseek-v4-flash-free` | 仅 `AI_PROVIDER=zen` 时生效 |
+| 配置项 | 值 |
+|---|---|
+| HTTP 端点 | `https://kaifa-d1gdl3ow4ec39065b.service.tcloudbase.com/api` |
+| 路径 | `/api/divine`（八字/紫微/career）、`/api/ask`（梅花易数） |
+| 模型 | 混元 hy3（`hunyuan-v3` 组，消耗成长计划免费 Token 额度） |
+| 鉴权 | 云函数内 origin 白名单（无 API Key，浏览器直连） |
+| 超时 | 60s（云函数）/ 60s（HTTP 网关上限） |
 
-> Archive 也提供 Anthropic 兼容端点 `https://ark.cn-beijing.volces.com/api/plan`（`/v1/messages`），本项目统一走 OpenAI 兼容 `/chat/completions`，故用 `/v3`。
+前端通过 `src/lib/api.ts` 的 `AI_BASE_URL` 常量调用，无密钥、无中间代理。
+
+> 云函数代码独立部署（不在本仓库内），包含提示词构造、输入校验、JSON normalize 逻辑。
 
 ## 分析视角（view）
 
@@ -91,7 +88,7 @@ functions/api/ask.ts      /api/ask：梅花易数
 | `career` | 职场事业：官杀财星·职业规划 | 同 `bazi`，提示词聚焦官杀/财星/印星/食伤（UI 入口已移除，后端保留） |
 
 - **紫微不再让模型自排**：集成 iztro 引擎在**前端**排盘（与八字共用同一套真太阳时校正时刻），星盘作为权威数据传给模型解读，模型「勿重复排盘」。
-- `view` 经 `functions/api/divine.ts` 白名单校验（`bazi`/`ziwei`/`career`），防任意字符串注入。
+- `view` 经云函数白名单校验（`bazi`/`ziwei`/`career`），防任意字符串注入。
 
 ## 可信度系统
 
@@ -110,7 +107,7 @@ functions/api/ask.ts      /api/ask：梅花易数
 - 未起运者（新生儿）不得伪造当前大运：用 `currentDaYun.gan === ""` 判空显示「尚未起运」。
 - **梅花起卦必须确定性**：`src/lib/meihua.ts` 公式只用 年支序+农历月日+时辰+心念数，绝不用 `Math.random`；同刻+同念必同卦。AI 失败 → 64 卦卦辞（真实文本）+「AI 解读暂不可用」，绝不显示假 AI。
 - 表单页「开始推演」写入 `sessionStorage`；推演/结果页若读不到会跳回 `/bazi`。
-- `ARK_API_KEY` / `ZEN_API_KEY` 只在 Cloudflare 服务端 env，浏览器与代码仓库不得出现明文。
+- `ZEN_API_KEY` 只在 Cloudflare 服务端 env，浏览器与代码仓库不得出现明文。
 - 改了 `ALLOWED_ORIGINS`（`functions/_shared.ts`）才能在自定义域名下调用 AI 接口。
 - 禁止浏览器 `alert`，错误一律走 `ErrorBanner`/页内提示/Toast。
 

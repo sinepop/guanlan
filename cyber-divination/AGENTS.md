@@ -12,9 +12,9 @@
 - 未起运者（新生儿）不得伪造当前大运：用 `currentDaYun.gan === ""` 判空显示「尚未起运」。
 - 禁止浏览器 `alert`，错误一律走 `ErrorBanner`/页内提示。
 - 禁止硬编码假结果（甲子/87 分/固定上上签）；AI 不可用时显示错误而不是假结果。
-- `ARK_API_KEY` / `ZEN_API_KEY` 只进 Cloudflare secret env，代码/README/日志不得出现明文。
-- AI 后端由 `lib/zen.ts` 的 `resolveProvider()` 按 `AI_PROVIDER` 选择：默认 `ark`（火山方舟 plan / `ark-code-latest`，Auto 模式）；`zen` 为旧 DeepSeek。改后端只换 env，不改提示词。
-- 改 `functions/_shared.ts` 的 `ALLOWED_ORIGINS` 才能换域名；限流逻辑与模型无关。
+- AI 后端为腾讯云 CloudBase 云函数 `guanlan`（混元 hy3），前端通过 `src/lib/api.ts` 的 `AI_BASE_URL` 直连。无 API Key、无服务端代理。
+- 云函数内 origin 白名单（`ALLOWED_ORIGINS`）控制访问；改域名需更新云函数代码并重新部署。
+- 改提示词/校验逻辑：改云函数代码（独立部署，不在本仓库内），不是 `lib/zen.ts`（已删除）。
 - 自定义类型声明在 `types/`（lunar 包无 d.ts，方法签名以实际运行为准）。
 
 ## 文档
