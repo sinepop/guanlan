@@ -25,11 +25,30 @@ export interface UserProfile {
 const KEY = "cyber-divination-memory";
 const MAX_PERSONAS = 8;
 
+// 关键词表设计原则（P1-1 修复）：
+// - 只收语义明确的 2+ 字复合词，不收高歧义单字（「爱」「情」「合」「财」「钱」
+//   「买」「卖」「股」「房」「病」等在无关语境极易误命中：合同/事情/毛病/买房时机）
+// - 维度边界：学业/考试归 career；婚恋/桃花归 love；投资/收入归 wealth；就医/生育归 health
 const FOCUS_KEYWORDS: Record<FocusDim, string[]> = {
-  career: ["工作", "事业", "升职", "跳槽", "创业", "项目", "面试", "职业", "考试", "学业", "考研", "offer", "上班", "老板", "同事", "辞职", "转型"],
-  love: ["感情", "爱", "婚", "情", "合", "对象", "男友", "女友", "老公", "老婆", "桃花", "分手", "复合", "表白", "暧昧", "相亲", "暗恋"],
-  wealth: ["财", "钱", "投资", "理财", "股", "基金", "房", "买", "卖", "收入", "财运", "破财", "还款", "负债"],
-  health: ["病", "健康", "身体", "手术", "怀孕", "生产", "康复", "体检", "症状", "调理"],
+  career: [
+    "工作", "事业", "升职", "跳槽", "创业", "项目", "面试", "职业", "考试", "学业",
+    "考研", "offer", "上班", "老板", "同事", "辞职", "转型", "就业", "求职", "升迁",
+    "职位", "副业", "打工", "工薪", "深造", "留学", "考公", "考编", "编制",
+  ],
+  love: [
+    "感情", "恋爱", "婚姻", "婚恋", "结婚", "离婚", "对象", "男友", "女友", "老公",
+    "老婆", "桃花", "分手", "复合", "表白", "暧昧", "相亲", "暗恋", "单身", "脱单",
+    "追求", "前任", "情感", "另一半", "伴侣", "喜欢的人", "复合吗",
+  ],
+  wealth: [
+    "财运", "赚钱", "亏损", "投资", "理财", "股票", "基金", "买房", "卖房", "收入",
+    "破财", "还款", "负债", "财富", "涨薪", "存款", "债务", "还钱", "金钱", "财务",
+    "中彩票", "还债",
+  ],
+  health: [
+    "生病", "健康", "身体", "手术", "怀孕", "生产", "康复", "体检", "症状", "调理",
+    "疾病", "就医", "住院", "治疗", "生育", "备孕", "体质", "虚弱", "失眠",
+  ],
 };
 
 // 生辰指纹（用于 persona 去重）：纳入全部影响 computeBazi 结果的字段
@@ -173,19 +192,30 @@ export function setPrimary(id: string): boolean {
   return true;
 }
 
-/** 从问题文本推断关注维度并累加权重。返回本次命中的维度（可能为空）。 */
-export function inferFocus(question: string): FocusDim[] {
+/** 纯函数：从问题文本检测命中的关注维度（不写记忆）。供测试与 inferFocus 复用。 */
+export function detectFocus(question: string): FocusDim[] {
   if (!question) return [];
-  const hit: FocusDim[] = [];
   const dims: FocusDim[] = ["career", "love", "wealth", "health"];
+  const hit: FocusDim[] = [];
   for (const d of dims) {
     if (FOCUS_KEYWORDS[d].some((kw) => question.includes(kw))) hit.push(d);
   }
+  return hit;
+}
+
+/** 从问题文本推断关注维度并累加权重。返回本次命中的维度（可能为空）。 */
+export function inferFocus(question: string): FocusDim[] {
+  const hit = detectFocus(question);
   if (hit.length === 0) return [];
   const p = getProfile();
   for (const d of hit) p.focus[d] += 1;
   save(p);
   return hit;
+}
+
+// 暴露纯函数给运行时端到端测试（无副作用，无安全风险）
+if (typeof window !== "undefined") {
+  (window as unknown as { detectFocus?: typeof detectFocus }).detectFocus = detectFocus;
 }
 
 /** 当前最关注的维度（提及次数最高且 > 0）；用于 LLM context 选择与 UI 老用户提示 */

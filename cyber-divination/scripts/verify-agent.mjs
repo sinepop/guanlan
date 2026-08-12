@@ -226,6 +226,56 @@ async function main() {
   const hasClearBtn = await page.isVisible("text=清除命盘记忆").catch(() => false);
   check("P3d 有清除命盘记忆入口（P1-4）", hasClearBtn);
 
+  // === 场景 6：focus 关键词单字歧义修复（P1-1） ===
+  // detectFocus 已暴露在 window 上（memory.ts）；纯函数无副作用
+  const focusCases = await page.evaluate(() => {
+    const fn = window.detectFocus;
+    if (typeof fn !== "function") return { err: "window.detectFocus 未暴露" };
+    const run = (q) => fn(q).slice().sort().join(",");
+    return {
+      // 旧 bug：单字误判（「合」「情」「爱」「病」「买」）应不再误命中
+      合同纠纷: run("合同纠纷怎么办"),
+      心情不好: run("今天心情不好"),
+      可爱小猫: run("可爱的小猫"),
+      毛病诊断: run("程序毛病在哪"),
+      工作事情: run("工作的事情怎么处理"), // career 命中（工作），但 love 不应命中（事情的单字情已去）
+      // 多维度同命中
+      事业财运: run("看看我的事业和财运"),
+      // 维度准确命中
+      结婚: run("什么时候能结婚"),
+      脱单: run("我会脱单吗"),
+      投资亏了: run("最近投资亏了"),
+      股票套牢: run("股票套牢怎么办"),
+      身体恢复: run("手术后身体恢复"),
+      备孕: run("今年适合备孕吗"),
+      考试: run("考试能过吗"),
+      副业: run("想做副业"),
+    };
+  });
+  if (focusCases.err) {
+    check("P1-1 window.detectFocus 暴露", false, focusCases.err);
+  } else {
+    check("P1-1 window.detectFocus 暴露", true);
+    // 单字歧义：合同/事情/可爱/毛病 → 应无 love/health 误命中
+    check("P1-1a 「合同」不误命中 love", focusCases.合同纠纷 !== "love" && !focusCases.合同纠纷.includes("love"), focusCases.合同纠纷);
+    check("P1-1a 「心情」不误命中 love", focusCases.心情不好 === "", focusCases.心情不好);
+    check("P1-1a 「可爱」不误命中 love", focusCases.可爱小猫 === "", focusCases.可爱小猫);
+    check("P1-1a 「毛病」不误命中 health", focusCases.毛病诊断 === "", focusCases.毛病诊断);
+    // 「工作的事情」只命中 career，不命中 love（事情的情单字已去）
+    check("P1-1a 「事情」不误命中 love（工作的事）", focusCases.工作事情 === "career", focusCases.工作事情);
+    // 多维度同命中
+    check("P1-1b 「事业+财运」双命中 career+wealth", focusCases.事业财运 === "career,wealth", focusCases.事业财运);
+    // 维度准确
+    check("P1-1c 「结婚」→ love", focusCases.结婚 === "love", focusCases.结婚);
+    check("P1-1c 「脱单」→ love", focusCases.脱单 === "love", focusCases.脱单);
+    check("P1-1c 「投资」→ wealth", focusCases.投资亏了 === "wealth", focusCases.投资亏了);
+    check("P1-1c 「股票」→ wealth", focusCases.股票套牢 === "wealth", focusCases.股票套牢);
+    check("P1-1c 「身体」→ health", focusCases.身体恢复 === "health", focusCases.身体恢复);
+    check("P1-1c 「备孕」→ health", focusCases.备孕 === "health", focusCases.备孕);
+    check("P1-1c 「考试」→ career", focusCases.考试 === "career", focusCases.考试);
+    check("P1-1c 「副业」→ career", focusCases.副业 === "career", focusCases.副业);
+  }
+
   await browser.close();
   server.close();
   console.log(`\n=== 结果：${pass} 通过 / ${fail} 失败 ===\n` + checks.join("\n"));
