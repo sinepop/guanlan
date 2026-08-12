@@ -35,5 +35,22 @@ check("「可爱」不命中 love", detectFocus("可爱小猫"), []);
 check("「毛病」不命中 health", detectFocus("程序毛病"), []);
 check("「事情」不命中 love", detectFocus("工作的事情怎么处理"), ["career"]);
 
+// P1-v2-I 关键词扩展 + 歧义修复
+check("「姻缘」命中 love", detectFocus("算姻缘").sort(), ["love"]);
+check("「生子」命中 health", detectFocus("想生子").sort(), ["health"]);
+check("「金钱纠纷」不再误命中 wealth（去掉「金钱」）", detectFocus("金钱纠纷"), []);
+check("「缺钱」命中 wealth", detectFocus("最近缺钱").sort(), ["wealth"]);
+check("「财务紧张」命中 wealth", detectFocus("财务紧张").sort(), ["wealth"]);
+
+// P1-v2-K 边界用例（深度覆盖）
+check("关键词长文本包含（工作量含工作）", detectFocus("工作量太大").sort(), ["career"]);
+// 已知边界（不修，权衡）：「老公公」含「老公」会误命中 love。中文无空格难做全词边界，
+// 真实用户问「老公公」概率极小，ROI 太低。如真要修需要按句切词（结巴分词等）或换正则边界。
+check("[已知边界] 「老公公」误命中 love（不修，中文无空格）", detectFocus("老公公").sort(), ["love"]);
+check("超长文本性能（1000 字重复关键词只命中一次）", detectFocus("工作".repeat(500)).sort(), ["career"]);
+check("关键词相邻多维度（事业财运相邻）", detectFocus("事业财运哪个好").sort(), ["career", "wealth"]);
+check("英文穿插（offer 命中 career）", detectFocus("拿到 offer 了").sort(), ["career"]);
+check("标点分隔（工作，跳槽）", detectFocus("工作，跳槽").sort(), ["career"]);
+
 console.log(`\n=== unit-memory: ${pass} 通过 / ${fail} 失败 ===\n` + checks.join("\n"));
 process.exit(fail > 0 ? 1 : 0);

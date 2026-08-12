@@ -38,16 +38,16 @@ const FOCUS_KEYWORDS: Record<FocusDim, string[]> = {
   love: [
     "感情", "恋爱", "婚姻", "婚恋", "结婚", "离婚", "对象", "男友", "女友", "老公",
     "老婆", "桃花", "分手", "复合", "表白", "暧昧", "相亲", "暗恋", "单身", "脱单",
-    "追求", "前任", "情感", "另一半", "伴侣", "喜欢的人", "复合吗",
+    "追求", "前任", "情感", "另一半", "伴侣", "喜欢的人", "复合吗", "姻缘",
   ],
   wealth: [
     "财运", "赚钱", "亏损", "投资", "理财", "股票", "基金", "买房", "卖房", "收入",
-    "破财", "还款", "负债", "财富", "涨薪", "加薪", "存款", "债务", "还钱", "金钱",
-    "财务", "中彩票", "还债",
+    "破财", "还款", "负债", "财富", "涨薪", "加薪", "存款", "债务", "还钱",
+    "财务紧张", "缺钱", "中彩票", "还债",
   ],
   health: [
     "生病", "健康", "身体", "手术", "怀孕", "生产", "康复", "体检", "症状", "调理",
-    "疾病", "就医", "住院", "治疗", "生育", "备孕", "体质", "虚弱", "失眠",
+    "疾病", "就医", "住院", "治疗", "生育", "备孕", "生子", "体质", "虚弱", "失眠",
   ],
 };
 
@@ -157,7 +157,9 @@ export function ensurePersona(input: BaziInput, label = "自己"): string {
     return existing.id;
   }
   const id = newId();
-  p.personas.push({ id, label, baziInput: input, createdAt: Date.now(), lastUsedAt: Date.now() });
+  // 浅拷贝 input 防御外部引用污染（P1-v2-A）：调用方提交后若复用同一 input 对象
+  // 修改其字段，不应回写到已固化的 persona
+  p.personas.push({ id, label, baziInput: { ...input }, createdAt: Date.now(), lastUsedAt: Date.now() });
   if (!p.primaryPersonaId) p.primaryPersonaId = id;
   if (p.personas.length > MAX_PERSONAS) {
     p.personas.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
@@ -253,12 +255,12 @@ export function getPersonaSummary(): string {
   return `${cal} ${b.year}年${b.month}月${b.day}日 · ${b.gender === "male" ? "男" : "女"} · ${b.location} ${focusPart}`;
 }
 
-/** 弱提示（首页用，不暴露生辰细节，只表达"已保存命盘"）— 审查 P0-3 隐私修复 */
+/** 弱提示（首页用，不暴露生辰细节也不暴露关注维度，只表达"已保存命盘"）— 审查 P0-3 + P1-v2-J 隐私 */
 export function getPersonaHint(): string {
   const persona = getPrimaryPersona();
   if (!persona) return "";
-  const top = getTopFocus();
-  return top ? `已保存命盘 · 最近关注${FOCUS_LABEL[top]}` : "已保存命盘";
+  // P1-v2-J：不再暴露「最近关注 XX」给共用设备的旁观者（隐私扩展修复）
+  return "已保存命盘";
 }
 
 /**

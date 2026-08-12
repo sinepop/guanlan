@@ -76,9 +76,10 @@ export default function LedgerPage() {
   const accuracy = closed > 0 ? Math.round((verifiedCount / closed) * 100) : null;
 
   // 按维度拆分应验率（评估闭环深度：告诉用户事业/感情哪个维度更准）
+  // P1-v2-F：focus 现在是 FocusDim[]（多维度），用 includes 查询
   const DIMS: FocusDim[] = ["career", "love", "wealth", "health"];
   const dimStats = DIMS.map((d) => {
-    const subset = entries.filter((e) => e.focus === d);
+    const subset = entries.filter((e) => Array.isArray(e.focus) && e.focus.includes(d));
     const v = subset.filter((e) => e.followUpStatus === "verified").length;
     const r = subset.filter((e) => e.followUpStatus === "refuted").length;
     const c = v + r;

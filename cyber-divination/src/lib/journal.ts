@@ -15,7 +15,7 @@ export interface JournalEntry {
   advice?: string; // 行动建议/今日一句
   followUpStatus?: FollowUpStatus; // 应验状态（默认 pending）
   note?: string; // 用户备注
-  focus?: FocusDim; // 关注维度（评估闭环用：按维度拆分应验率；有 question 时自动推断）
+  focus?: FocusDim[]; // 关注维度（评估闭环用：按维度拆分应验率；有 question 时自动推断；可能多维度命中）
 }
 
 const KEY = "cyber-divination-journal";
@@ -27,7 +27,16 @@ function readAll(): JournalEntry[] {
     if (!raw) return [];
     const arr = JSON.parse(raw) as unknown;
     if (!Array.isArray(arr)) return [];
-    return arr.filter((x): x is JournalEntry => !!x && typeof x === "object" && typeof (x as JournalEntry).id === "string");
+    return arr.filter((x): x is JournalEntry =>
+      !!x && typeof x === "object" && typeof (x as JournalEntry).id === "string"
+    ).map((e) => {
+      // 向后兼容（P1-v2-F）：旧版本 focus 是单值 FocusDim；新版本是 FocusDim[]
+      const ef = (e as { focus?: unknown }).focus;
+      if (ef == null) return e;
+      if (Array.isArray(ef)) return e;
+      if (typeof ef === "string") return { ...e, focus: [ef as FocusDim] };
+      return { ...e, focus: undefined };
+    });
   } catch {
     return [];
   }
@@ -62,10 +71,11 @@ export function getEntries(): JournalEntry[] {
 export function saveEntry(e: Omit<JournalEntry, "id">): string | null {
   // 评估闭环：有 question 时自动推断关注维度（存档=真正在意，比起卦即学更准确）
   // 同时把维度累加进 memory.focus（单一真相源，避免调用方多处写）
+  // P1-v2-F：保留全部命中维度（之前只取 hit[0] 会丢多维度记录，与 memory.focus 多维度加权不一致）
   let focus = e.focus;
   if (!focus && e.question) {
     const hit = inferFocus(e.question);
-    focus = hit.length > 0 ? hit[0] : undefined;
+    focus = hit.length > 0 ? hit : undefined;
   }
   const entry: JournalEntry = { ...e, focus, id: newId() };
   const list = readAll();

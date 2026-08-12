@@ -135,7 +135,7 @@ async function main() {
   check("P0-3b 横幅不暴露完整出生年月日", leaksBirthdate === false, `文案：${bannerText.slice(0,80)}`);
   // P1-B（v2 审查扩展）：横幅也不应明确暴露关注维度（"最近关注感情/财运/..."等）
   // 注：当前设计保留「关注维度」作为弱提示，但不应直接显示维度名（事业/感情/财运/健康）让旁观者读到
-  const leaksFocusDim = /(事业|感情|财运|健康)(?!供)/.test(bannerText) && /关注|最近/.test(bannerText);
+  const leaksFocusDim = /(事业|感情|财运|健康)/.test(bannerText) && /关注|最近/.test(bannerText);
   check("P0-3c 横幅不直接暴露关注维度名（P1-B 扩展）", leaksFocusDim === false, `文案：${bannerText.slice(0,80)}`);
 
   // === 场景 3：首页一键排盘恢复 → store 有 BaziInput（P0-1 用端） ===
@@ -151,6 +151,9 @@ async function main() {
     });
     check("P0-1d 点横幅后 persona 生辰恢复到 store", result.ok === true, JSON.stringify(result).slice(0,120));
     await wait(600); // 等点击触发的 setTimeout 跳转被 route fulfill 成首页
+  } else {
+    // P1-v2-D：场景 2 失败时显式记 fail，避免覆盖空洞被「33 通过 / 0 失败」掩盖
+    check("P0-1d 点横幅后 persona 生辰恢复到 store", false, "前置场景 2 失败（bannerVisible=false）导致本场景被跳过");
   }
 
   // === 场景 4：events 合并不丢（P0-2） ===
@@ -197,20 +200,22 @@ async function main() {
   // 直接往 journal 塞测试数据（绕过 UI 验证聚合逻辑）
   await page.evaluate(() => {
     const entries = [
-      { id: "t1", type: "ask", createdAt: Date.now()-3000, question: "工作要不要跳槽", resultSummary: "test1", followUpStatus: "verified", focus: "career" },
-      { id: "t2", type: "ask", createdAt: Date.now()-2000, question: "感情合不合适", resultSummary: "test2", followUpStatus: "verified", focus: "love" },
-      { id: "t3", type: "ask", createdAt: Date.now()-1000, question: "工作项目能不能接", resultSummary: "test3", followUpStatus: "refuted", focus: "career" },
-      { id: "t4", type: "ask", createdAt: Date.now(), question: "项目能不能做", resultSummary: "test4", followUpStatus: "pending", focus: "career" },
+      { id: "t1", type: "ask", createdAt: Date.now()-3000, question: "工作要不要跳槽", resultSummary: "test1", followUpStatus: "verified", focus: ["career"] },
+      { id: "t2", type: "ask", createdAt: Date.now()-2000, question: "感情合不合适", resultSummary: "test2", followUpStatus: "verified", focus: ["love"] },
+      { id: "t3", type: "ask", createdAt: Date.now()-1000, question: "工作项目能不能接", resultSummary: "test3", followUpStatus: "refuted", focus: ["career"] },
+      { id: "t4", type: "ask", createdAt: Date.now(), question: "项目能不能做", resultSummary: "test4", followUpStatus: "pending", focus: ["career"] },
+      // P1-v2-F：多维度命中（事业+财运），应在两个维度拆分里都出现
+      { id: "t5", type: "ask", createdAt: Date.now()-500, question: "事业财运哪个好", resultSummary: "test5", followUpStatus: "verified", focus: ["career", "wealth"] },
     ];
     localStorage.setItem("cyber-divination-journal", JSON.stringify(entries));
   });
   await page.goto(`${BASE}/ledger`);
   await wait(500);
   const ledgerText = await page.locator("body").innerText().catch(() => "");
-  // 应验率 = verified/(verified+refuted) = 2/(2+1) = 67%
+  // 应验率 = verified/(verified+refuted) = 3/(3+1) = 75%（t1/t2/t5 verified，t3 refuted，t4 pending 不算）
   check("P3a ledger 展示应验率", ledgerText.includes("应验率"), ledgerText.slice(0,200));
-  check("P3b 应验率数值=67%（2/3 已结案）", ledgerText.includes("67%"), `文案含应验率：${ledgerText.match(/应验率 \d+%/)?.[0] ?? "未匹配"}`);
-  // 维度拆分：事业 1 verified + 1 refuted = 50%；感情 1 verified = 100%
+  check("P3b 应验率数值=75%（3/4 已结案，含多维度 t5）", ledgerText.includes("75%"), `文案含应验率：${ledgerText.match(/应验率 \d+%/)?.[0] ?? "未匹配"}`);
+  // 维度拆分：事业（t1 verified + t3 refuted + t5 verified）= 2/3 = 67%；感情（t2）= 100%；财运（t5）= 100%
   const hasDimSection = ledgerText.includes("按关注维度");
   check("P3c 有按维度拆分区块", hasDimSection);
   // 清除记忆按钮存在（P1-4）
